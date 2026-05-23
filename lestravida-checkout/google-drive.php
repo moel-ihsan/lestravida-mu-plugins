@@ -7,8 +7,13 @@ if (!defined('ABSPATH')) exit;
 
 final class LVC_Google_Drive {
 
-    const ROOT_FOLDER_ID  = '1m82C0-mlrhmoSyVMkuHkI1zwFb2R5hH6';
     const CREDENTIAL_FILE = 'google-oauth.json';
+
+    private static function root_folder_id(): string {
+        return function_exists('lvc_config')
+            ? (string) lvc_config('google_drive.root_folder_id', '')
+            : '';
+    }
 
     private static $last_error = '';
     private static $token = null;
@@ -374,7 +379,14 @@ final class LVC_Google_Drive {
     private static function get_product_order_folder(WC_Order $order, int $product_id): string {
         $ctx = self::get_event_context($product_id);
 
-        $event_folder = self::get_or_create_folder($ctx['event'], self::ROOT_FOLDER_ID);
+        $root_folder_id = self::root_folder_id();
+
+        if ($root_folder_id === '') {
+            self::$last_error = 'Google Drive root_folder_id belum diatur di base_config.json.';
+            return '';
+        }
+
+        $event_folder = self::get_or_create_folder($ctx['event'], $root_folder_id);
 
         if (!$event_folder) {
             return '';

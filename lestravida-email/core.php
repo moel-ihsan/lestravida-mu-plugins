@@ -4,7 +4,9 @@ if (!defined('ABSPATH')) exit;
 /**
  * KONFIGURASI LOGO
  */
-$GLOBALS['LV_FORCE_LOGO_URL'] = 'https://lestravida.com/wp-content/uploads/2025/07/logo-header.png';
+$GLOBALS['LV_FORCE_LOGO_URL'] = function_exists('lvc_config')
+    ? lvc_config('branding.force_logo_url', '')
+    : '';
 
 function lv_use_cid() {
     return strpos(home_url('/'), 'localhost') !== false;
