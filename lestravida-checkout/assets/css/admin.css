@@ -1,0 +1,22 @@
+#woocommerce-order-data .order_data_column {
+    width: 100% !important;
+}
+
+.lvc-recap-table th,
+.lvc-recap-table td {
+    vertical-align: middle !important;
+}
+
+.lvc-recap-table th:first-child,
+.lvc-recap-table td:first-child,
+.lvc-recap-table th:nth-child(2),
+.lvc-recap-table td:nth-child(2),
+.lvc-recap-table th:nth-child(3),
+.lvc-recap-table td:nth-child(3) {
+    text-align: left;
+}
+
+.lvc-sort {
+    text-decoration: none;
+    color: inherit;
+}

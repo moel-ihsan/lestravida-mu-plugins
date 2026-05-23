@@ -1,0 +1,10 @@
+google-oauth.json
+credentials.json
+token.json
+.env
+*.log
+.DS_Store
+uploads/
+tmp/
+cache/service-account.json
+*.json

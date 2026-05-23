@@ -1,0 +1,25 @@
+.lvc-upload-event{
+    margin-bottom: 20px!important;
+}
+
+.lvc-upload-input.lvc-is-uploading {
+    opacity: .5;
+    pointer-events: none;
+}
+
+.lvc-upload-status {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.lvc-upload-success {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.lvc-upload-error {
+    color: #dc2626;
+    font-weight: 600;
+}

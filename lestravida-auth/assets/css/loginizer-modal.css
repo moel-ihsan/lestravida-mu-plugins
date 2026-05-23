@@ -1,0 +1,73 @@
+:root{
+  --lv-btn-bg:#f5efef;
+  --lv-btn-bg-hover:#efe9e6;
+  --lv-btn-border:#1f2e28;
+  --lv-font:16px;
+  --lv-pad-y:14px;
+  --lv-pad-x:16px;
+  --lv-icon-size:22px;
+  --lv-icon-left:16px;
+}
+
+#account-modal .ct-account-modal #lz-social-login-btns,
+#account-modal .ct-account-modal #lz-social-login-btns-register{
+  width:100% !important;
+  display:flex !important;
+  justify-content:center !important;
+  align-items:stretch !important;
+  margin:12px 0 0 !important;
+  padding:0 !important;
+  clear:both;
+}
+
+#account-modal .ct-account-modal .loginizer-social-button{
+  position:relative !important;
+  width:100% !important;
+  min-height:52px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:var(--lv-btn-bg) !important;
+  border:2px solid var(--lv-btn-border) !important;
+  border-radius:0 !important;
+  padding:var(--lv-pad-y) var(--lv-pad-x) !important;
+  padding-left:calc(var(--lv-pad-x) + 44px) !important;
+  color:var(--lv-btn-border) !important;
+  font-size:var(--lv-font) !important;
+  font-weight:700 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.06em !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
+  box-sizing:border-box !important;
+  gap:10px;
+}
+
+#account-modal .ct-account-modal .loginizer-social-button:hover{
+  background:var(--lv-btn-bg-hover) !important;
+}
+
+#account-modal .ct-account-modal .loginizer-social-btn-logo{
+  position:absolute !important;
+  left:var(--lv-icon-left) !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  width:var(--lv-icon-size) !important;
+  height:var(--lv-icon-size) !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  pointer-events:none !important;
+}
+
+#account-modal .ct-account-modal .loginizer-social-btn-logo img{
+  width:var(--lv-icon-size) !important;
+  height:var(--lv-icon-size) !important;
+  object-fit:contain !important;
+}
+
+#account-modal .ct-account-modal .lv-google-label{
+  display:inline-block;
+  line-height:1.2;
+  text-align:center;
+}

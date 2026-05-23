@@ -1,0 +1,91 @@
+/* =========================================================
+   HIDE UNUSED TABS
+========================================================= */
+
+li.shipping_options,
+li.linked_product_options,
+li.attribute_options,
+li.advanced_options,
+li.marketplace-suggestions_options{
+    display:none!important;
+}
+
+/* =========================================================
+   HIDE UNUSED INVENTORY FIELDS
+========================================================= */
+
+._sku_field,
+.form-field._global_unique_id_field,
+.form-field._low_stock_amount_field{
+    display:none!important;
+}
+
+/* =========================================================
+   GENERAL CLEANUP
+========================================================= */
+.lestravida-fields textarea{
+    width:50%;
+    min-height:90px;
+    max-width:640px;
+}
+
+.lestravida-fields input[type="text"],
+.lestravida-fields input[type="url"],
+.lestravida-fields input[type="date"],
+.lestravida-fields input[type="time"],
+.lestravida-fields input[type="number"]{
+    width:50%;
+    max-width:640px;
+}
+
+.lestravida-fields p.form-field{
+    position:relative;
+    padding-right:28px;
+}
+
+.lestravida-fields p.form-field label{
+    float:left;
+    width:180px!important;
+    margin:0!important;
+    font-weight:600;
+}
+
+.lestravida-fields .description{
+    margin-left:10px!important;
+    width:calc(100% - 10px);
+    color:#666;
+}
+
+.lestravida-fields .woocommerce-help-tip{
+    float:none!important;
+    position:absolute;
+    right:125px;
+    top:12px;
+    margin:0!important;
+}
+
+/* =========================================================
+   INVENTORY HELPER
+========================================================= */
+
+.lestravida-inventory-helper{
+    background:#fff;
+    border-top:1px solid #eee;
+    padding-top:10px;
+}
+
+/* =========================================================
+   CHECKBOX
+========================================================= */
+
+.checkbox{
+    margin-top:2px!important;
+}
+
+/* =========================================================
+   INVENTORY TAB ICON SPACING
+========================================================= */
+
+#woocommerce-product-data ul.wc-tabs li.inventory_options a::before{
+    margin-right:10px;
+}

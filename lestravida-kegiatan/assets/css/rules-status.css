@@ -1,0 +1,10 @@
+li.product.lv-product-closed {
+    position: relative;
+    opacity: 0.55;
+    filter: grayscale(1);
+}
+
+.lv-disabled-button {
+    pointer-events: none;
+    cursor: not-allowed;
+}

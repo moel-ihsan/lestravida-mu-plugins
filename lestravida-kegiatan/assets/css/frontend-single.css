@@ -1,0 +1,35 @@
+/* =========================================================
+   SINGLE CHAPTER META
+========================================================= */
+
+.lv-single-chapter{
+    margin-bottom:18px;
+}
+
+.lv-single-chapter-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+
+    text-decoration:none!important;
+    text-transform:uppercase;
+
+    font-size:1rem;
+    font-weight:600;
+}
+
+/* =========================================================
+   META DOC
+========================================================= */
+
+.lv-meta-doc{
+    border-bottom:0!important;
+}
+
+/* =========================================================
+   LAST META ITEM
+========================================================= */
+
+.lv-product-about .lv-meta-item:last-child{
+    margin-bottom:0;
+}

@@ -1,0 +1,30 @@
+.lvk-wa-box{
+    margin-top:30px;
+    padding:24px;
+    border:1px solid #e5e5e5;
+    border-radius:16px;
+    background:#fafafa;
+}
+
+.lvk-wa-title{
+    margin-top:0;
+    margin-bottom:10px;
+}
+
+.lvk-wa-desc{
+    margin-bottom:0px;
+}
+
+.lvk-wa-button{
+    display:inline-block;
+    padding:12px 20px;
+    background:#25D366;
+    color:#fff!important;
+    text-decoration:none;
+    border-radius:10px;
+    font-weight:600;
+}
+
+.woocommerce-thankyou-order-details{
+    display:none!important;
+}
