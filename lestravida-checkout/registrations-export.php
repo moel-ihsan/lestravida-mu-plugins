@@ -230,7 +230,21 @@ final class LVC_Registrations_Export {
 
         $ctx = self::product_context($product_id);
 
-        echo '<h2>' . esc_html('Daftar Peserta ' . $ctx['category'] . ' Chapter ' . $ctx['chapter'] . ' Batch ' . $ctx['batch']) . '</h2>';
+        $title_parts = ['Daftar Peserta'];
+
+        if ($ctx['category'] !== '') {
+            $title_parts[] = $ctx['category'];
+        }
+
+        if ($ctx['chapter'] !== '') {
+            $title_parts[] = 'Chapter ' . $ctx['chapter'];
+        }
+
+        if ($ctx['batch'] !== '') {
+            $title_parts[] = 'Batch ' . $ctx['batch'];
+        }
+
+        echo '<h2>' . esc_html(implode(' ', $title_parts)) . '</h2>';
 
         $export_url = wp_nonce_url(
             admin_url('admin-post.php?action=lvc_export_csv&product_id=' . $product_id),
@@ -396,9 +410,19 @@ final class LVC_Registrations_Export {
 
         if ($terms && !is_wp_error($terms)) {
             foreach ($terms as $term) {
-                if (isset($known_events[$term->slug])) {
-                    $context['category'] = $known_events[$term->slug];
-                    break;
+                $check = $term;
+
+                while ($check && !is_wp_error($check)) {
+                    if (isset($known_events[$check->slug])) {
+                        $context['category'] = $known_events[$check->slug];
+                        break 2;
+                    }
+
+                    if (empty($check->parent)) {
+                        break;
+                    }
+
+                    $check = get_term($check->parent, 'product_cat');
                 }
             }
 
@@ -407,8 +431,15 @@ final class LVC_Registrations_Export {
                     continue;
                 }
 
-                $context['chapter'] = $term->name;
-                break;
+                if (
+                    $context['category'] === 'Muda Mudi Mengabdi'
+                    && class_exists('LVK_Helper')
+                    && method_exists('LVK_Helper', 'is_mmm_top_level')
+                    && LVK_Helper::is_mmm_top_level($term)
+                ) {
+                    $context['chapter'] = $term->name;
+                    break;
+                }
             }
         }
 
@@ -416,7 +447,7 @@ final class LVC_Registrations_Export {
             $batch = (int) get_post_meta($product_id, LVK_Helper::META_BATCH, true);
 
             if ($batch > 0) {
-                $context['batch'] = $batch;
+                $context['batch'] = (string) $batch;
             }
         }
 
