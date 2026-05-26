@@ -8,3 +8,4 @@ uploads/
 tmp/
 cache/service-account.json
 *.json
+private/

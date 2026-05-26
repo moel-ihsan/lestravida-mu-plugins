@@ -20,9 +20,9 @@ final class LVC_Google_Drive {
     private static $folder_cache = [];
 
     private static function credential_path(): string {
-        return LVC_DIR . '/' . self::CREDENTIAL_FILE;
+        return dirname(ABSPATH) . '/private/' . self::CREDENTIAL_FILE;
     }
-
+    
     private static function oauth_config(): array {
         if (!file_exists(self::credential_path())) {
             return [];
@@ -89,6 +89,14 @@ final class LVC_Google_Drive {
 
     public static function admin_page(): void {
         $config = self::oauth_config();
+
+        if (empty($config['client_id']) || empty($config['client_secret'])) {
+            echo '<div class="wrap">';
+            echo '<h1>LVC Google Drive</h1>';
+            echo '<div class="notice notice-error"><p>File google-oauth.json tidak ditemukan atau tidak valid.</p></div>';
+            echo '</div>';
+            return;
+        }
 
         if (isset($_GET['code'])) {
             $response = wp_remote_post('https://oauth2.googleapis.com/token', [
