@@ -6,6 +6,8 @@
 
 if (!defined('ABSPATH')) exit;
 
+require_once WPMU_PLUGIN_DIR . '/config.php';
+
 define('LVC_DIR', __DIR__ . '/lestravida-checkout');
 define('LVC_URL', plugin_dir_url(__FILE__) . 'lestravida-checkout/');
 

@@ -6,6 +6,8 @@
 
 if (!defined('ABSPATH')) exit;
 
+require_once WPMU_PLUGIN_DIR . '/config.php';
+
 $base = __DIR__ . '/lestravida-email';
 
 if (!is_dir($base)) {
