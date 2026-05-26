@@ -219,19 +219,25 @@ final class LVC_Google_Drive {
 
     private static function get_event_context(int $product_id): array {
         $product = wc_get_product($product_id);
-
+    
+        $term_product_id = $product_id;
+    
+        if ($product && $product->is_type('variation')) {
+            $term_product_id = $product->get_parent_id();
+        }
+    
         $known_events = [
             'muda-mudi-mengabdi'    => 'Muda Mudi Mengabdi',
             'lestra-vida-mengabdi'  => 'Lestra Vida Mengabdi',
             'leaders-roundtable'    => 'Leaders Roundtable',
             'beasiswa-mera-sekolah' => 'Beasiswa Mera Sekolah',
         ];
-
-        $event   = $product ? $product->get_name() : 'Unknown Event';
+    
+        $event   = 'Unknown Event';
         $chapter = '';
-
-        $terms = get_the_terms($product_id, 'product_cat');
-
+    
+        $terms = get_the_terms($term_product_id, 'product_cat');
+    
         if ($terms && !is_wp_error($terms)) {
             foreach ($terms as $term) {
                 if (isset($known_events[$term->slug])) {
@@ -239,23 +245,30 @@ final class LVC_Google_Drive {
                     break;
                 }
             }
-
+    
             foreach ($terms as $term) {
                 if (isset($known_events[$term->slug])) {
                     continue;
                 }
-
-                $chapter = 'Chapter ' . $term->name;
-                break;
+    
+                if (
+                    $event === 'Muda Mudi Mengabdi'
+                    && class_exists('LVK_Helper')
+                    && method_exists('LVK_Helper', 'is_mmm_top_level')
+                    && LVK_Helper::is_mmm_top_level($term)
+                ) {
+                    $chapter = 'Chapter ' . $term->name;
+                    break;
+                }
             }
         }
-
+    
         $batch = 0;
-
+    
         if (class_exists('LVK_Helper')) {
-            $batch = (int) get_post_meta($product_id, LVK_Helper::META_BATCH, true);
+            $batch = (int) get_post_meta($term_product_id, LVK_Helper::META_BATCH, true);
         }
-
+    
         return [
             'event'   => $event,
             'chapter' => $chapter,
