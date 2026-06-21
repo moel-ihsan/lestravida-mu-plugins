@@ -242,46 +242,46 @@ final class LVC_Google_Drive {
             $term_product_id = $product->get_parent_id();
         }
     
-        $known_events = [
-            'muda-mudi-mengabdi'    => 'Muda Mudi Mengabdi',
-            'lestra-vida-mengabdi'  => 'Lestra Vida Mengabdi',
-            'leaders-roundtable'    => 'Leaders Roundtable',
-            'beasiswa-mera-sekolah' => 'Beasiswa Mera Sekolah',
-        ];
-    
         $event   = 'Unknown Event';
         $chapter = '';
     
         $terms = get_the_terms($term_product_id, 'product_cat');
     
         if ($terms && !is_wp_error($terms)) {
+            $top_term = null;
+            $child_term = null;
+            
             foreach ($terms as $term) {
-                if (isset($known_events[$term->slug])) {
-                    $event = $known_events[$term->slug];
-                    break;
+                if ($term->parent == 0) {
+                    $top_term = $term;
+                } else {
+                    $child_term = $term;
                 }
             }
-    
-            foreach ($terms as $term) {
-                if (isset($known_events[$term->slug])) {
-                    continue;
+            
+            // Jika admin hanya centang subkategori, cari parent tertingginya
+            if (!$top_term && $child_term) {
+                $ancestors = get_ancestors($child_term->term_id, 'product_cat');
+                if (!empty($ancestors)) {
+                    $top_term = get_term(end($ancestors), 'product_cat');
+                } else {
+                    $top_term = $child_term;
+                    $child_term = null;
                 }
-    
-                if (
-                    $event === 'Muda Mudi Mengabdi'
-                    && class_exists('LVK_Helper')
-                    && method_exists('LVK_Helper', 'is_mmm_top_level')
-                    && LVK_Helper::is_mmm_top_level($term)
-                ) {
-                    $chapter = 'Chapter ' . $term->name;
-                    break;
-                }
+            }
+            
+            if ($top_term && !is_wp_error($top_term)) {
+                $event = $top_term->name;
+            }
+            
+            if ($child_term && !is_wp_error($child_term)) {
+                $chapter = 'Chapter ' . $child_term->name;
             }
         }
     
         $batch = 0;
     
-        if (class_exists('LVK_Helper')) {
+        if (class_exists('LVK_Helper') && defined('LVK_Helper::META_BATCH')) {
             $batch = (int) get_post_meta($term_product_id, LVK_Helper::META_BATCH, true);
         }
     
