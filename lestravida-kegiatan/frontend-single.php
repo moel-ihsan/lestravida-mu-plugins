@@ -234,6 +234,8 @@ final class LVK_Single {
                 'Waktu Kegiatan',
                 $datetime
             );
+            
+            do_action('lvk_after_waktu_kegiatan', $product);
         }
 
         self::render_meta_item(

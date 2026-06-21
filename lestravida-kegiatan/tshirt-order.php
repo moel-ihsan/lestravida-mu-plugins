@@ -3,6 +3,7 @@
  * tshirt-order.php
  *
  * Mengelola fitur opsional pemesanan baju di halaman produk event.
+ * Menggunakan pendekatan UI/UX modern (Pills & Hidden Input Sync).
  */
 
 if (!defined('ABSPATH')) exit;
@@ -13,8 +14,11 @@ final class LVK_Tshirt_Order {
      * Hook utama
      */
     public static function hooks(): void {
-        // Tampilkan opsi baju di halaman produk
-        add_action('woocommerce_before_add_to_cart_button', [__CLASS__, 'render_tshirt_field']);
+        // Tampilkan desain UI baju di bawah Waktu Kegiatan
+        add_action('lvk_after_waktu_kegiatan', [__CLASS__, 'render_tshirt_ui']);
+
+        // Sisipkan hidden input di dalam form keranjang
+        add_action('woocommerce_before_add_to_cart_button', [__CLASS__, 'render_hidden_input']);
 
         // Simpan opsi baju ke dalam item cart
         add_filter('woocommerce_add_cart_item_data', [__CLASS__, 'add_cart_item_data'], 10, 2);
@@ -30,57 +34,132 @@ final class LVK_Tshirt_Order {
     }
 
     /**
-     * Tampilkan field dropdown ukuran baju
+     * Tampilkan UI modern (Pills & Size Chart)
      */
-    public static function render_tshirt_field(): void {
-        global $product;
-
+    public static function render_tshirt_ui($product): void {
         if (!$product || !class_exists('LVK_Helper') || !LVK_Helper::is_event_product($product)) {
             return;
         }
 
         ?>
-        <div class="lvk-tshirt-wrapper" style="margin-bottom: 20px; border-top: 1px solid #eaeaea; padding-top: 15px;">
-            <label for="lvk_tshirt_size" style="display: block; font-weight: bold; margin-bottom: 8px;">👕 Order Baju (Opsional)</label>
-            <select name="lvk_tshirt_size" id="lvk_tshirt_size" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; max-width: 350px;">
-                <option value="">Tidak Pesan Baju</option>
-                <option value="S">Ukuran S (+ Rp 88.000)</option>
-                <option value="M">Ukuran M (+ Rp 88.000)</option>
-                <option value="L">Ukuran L (+ Rp 88.000)</option>
-                <option value="> XL">Ukuran Besar (&gt; XL) (+ Rp 98.000)</option>
-            </select>
-            
-            <div style="margin-top: 8px;">
-                <a href="#" id="lvk-show-size-chart" style="font-size: 13px; text-decoration: underline; color: #007cba;">Lihat Desain & Size Chart</a>
-            </div>
+        <div class="lv-meta-item lvk-tshirt-ui-container" style="border-top: 1px dashed #eaeaea; margin-top: 15px; padding-top: 15px;">
+            <span class="lv-meta-label" style="display: block; margin-bottom: 8px;">👕 Order Baju Kepanitiaan (Opsional)</span>
+            <div class="lv-meta-value">
+                <style>
+                    .lvk-tshirt-options {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        margin-bottom: 10px;
+                    }
+                    .lvk-tshirt-pill {
+                        padding: 8px 14px;
+                        border: 2px solid #ddd;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: #666;
+                        background: #fff;
+                        transition: all 0.2s ease;
+                        user-select: none;
+                    }
+                    .lvk-tshirt-pill:hover {
+                        border-color: #007cba;
+                        color: #007cba;
+                    }
+                    .lvk-tshirt-pill.active {
+                        border-color: #007cba;
+                        background: #007cba;
+                        color: #fff;
+                    }
+                    .lvk-tshirt-pill small {
+                        display: block;
+                        font-size: 11px;
+                        font-weight: normal;
+                        opacity: 0.85;
+                        margin-top: 2px;
+                    }
+                </style>
 
-            <!-- Modal / Image Placeholder (Tersembunyi by default) -->
-            <div id="lvk-size-chart-container" style="display: none; margin-top: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fafafa;">
-                <p style="font-size: 12px; margin-bottom: 10px; font-weight: bold; color: #555;">Desain & Size Chart (Placeholder)</p>
-                <img src="https://placehold.co/600x400/eeeeee/333333?text=Gambar+Baju+%26+Size+Chart" alt="Size Chart" style="max-width: 100%; height: auto; border-radius: 4px;" />
+                <div class="lvk-tshirt-options" id="lvk-tshirt-pills-container">
+                    <div class="lvk-tshirt-pill active" data-value="">
+                        Tidak Pesan
+                    </div>
+                    <div class="lvk-tshirt-pill" data-value="S">
+                        S <small>+88Rb</small>
+                    </div>
+                    <div class="lvk-tshirt-pill" data-value="M">
+                        M <small>+88Rb</small>
+                    </div>
+                    <div class="lvk-tshirt-pill" data-value="L">
+                        L <small>+88Rb</small>
+                    </div>
+                    <div class="lvk-tshirt-pill" data-value="> XL">
+                        > XL <small>+98Rb</small>
+                    </div>
+                </div>
+
+                <a href="#" id="lvk-show-size-chart" style="font-size: 13px; text-decoration: underline; color: #007cba; display: inline-block; margin-top: 4px;">Lihat Desain & Size Chart</a>
+
+                <!-- Modal / Image Placeholder (Tersembunyi by default) -->
+                <div id="lvk-size-chart-container" style="display: none; margin-top: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fafafa;">
+                    <img src="https://placehold.co/600x400/eeeeee/333333?text=Gambar+Baju+%26+Size+Chart" alt="Size Chart" style="max-width: 100%; height: auto; border-radius: 4px; display: block;" />
+                </div>
             </div>
         </div>
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                var btn = document.getElementById('lvk-show-size-chart');
-                var container = document.getElementById('lvk-size-chart-container');
+                var pills = document.querySelectorAll('.lvk-tshirt-pill');
+                var hiddenInput = document.getElementById('lvk_tshirt_size_hidden');
                 
-                if(btn && container) {
-                    btn.addEventListener('click', function(e) {
+                // Pill Click Logic
+                pills.forEach(function(pill) {
+                    pill.addEventListener('click', function() {
+                        // Hapus active class dari semua pill
+                        pills.forEach(p => p.classList.remove('active'));
+                        // Tambahkan active class ke pill yang diklik
+                        this.classList.add('active');
+                        
+                        // Sinkronisasi ke hidden input jika ada
+                        if (hiddenInput) {
+                            hiddenInput.value = this.getAttribute('data-value');
+                        }
+                    });
+                });
+
+                // Size Chart Toggle Logic
+                var btnChart = document.getElementById('lvk-show-size-chart');
+                var chartContainer = document.getElementById('lvk-size-chart-container');
+                
+                if (btnChart && chartContainer) {
+                    btnChart.addEventListener('click', function(e) {
                         e.preventDefault();
-                        if (container.style.display === 'none') {
-                            container.style.display = 'block';
-                            btn.innerText = 'Sembunyikan Desain & Size Chart';
+                        if (chartContainer.style.display === 'none') {
+                            chartContainer.style.display = 'block';
+                            btnChart.innerText = 'Tutup Desain & Size Chart';
                         } else {
-                            container.style.display = 'none';
-                            btn.innerText = 'Lihat Desain & Size Chart';
+                            chartContainer.style.display = 'none';
+                            btnChart.innerText = 'Lihat Desain & Size Chart';
                         }
                     });
                 }
             });
         </script>
         <?php
+    }
+
+    /**
+     * Sisipkan hidden input ke dalam form keranjang WooCommerce
+     */
+    public static function render_hidden_input(): void {
+        global $product;
+        if (!$product || !class_exists('LVK_Helper') || !LVK_Helper::is_event_product($product)) {
+            return;
+        }
+        // Input ini akan dikirim saat klik "Daftar" (Add to Cart)
+        echo '<input type="hidden" name="lvk_tshirt_size" id="lvk_tshirt_size_hidden" value="">';
     }
 
     /**
