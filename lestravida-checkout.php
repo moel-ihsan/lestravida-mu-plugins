@@ -28,6 +28,7 @@ lvc_require('google-drive.php');
 lvc_require('order-admin.php');
 lvc_require('registrations-export.php');
 lvc_require('rename-product.php');
+lvc_require('settings.php');
 
 add_action('admin_menu', 'lvc_register_admin_menu', 5);
 add_action('admin_menu', 'lvc_remove_duplicate_admin_menu', 999);
