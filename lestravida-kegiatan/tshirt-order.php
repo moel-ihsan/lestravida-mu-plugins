@@ -14,11 +14,17 @@ final class LVK_Tshirt_Order {
      * Hook utama
      */
     public static function hooks(): void {
+        // Enqueue Assets
+        add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
+
         // Tampilkan desain UI baju di bawah Waktu Kegiatan
         add_action('lvk_after_waktu_kegiatan', [__CLASS__, 'render_tshirt_ui']);
 
         // Sisipkan hidden input di dalam form keranjang
         add_action('woocommerce_before_add_to_cart_button', [__CLASS__, 'render_hidden_input']);
+
+        // Validasi agar user wajib memilih (mencegah klik daftar jika kosong)
+        add_filter('woocommerce_add_to_cart_validation', [__CLASS__, 'validate_add_to_cart'], 10, 3);
 
         // Simpan opsi baju ke dalam item cart
         add_filter('woocommerce_add_cart_item_data', [__CLASS__, 'add_cart_item_data'], 10, 2);
@@ -34,6 +40,36 @@ final class LVK_Tshirt_Order {
     }
 
     /**
+     * Enqueue CSS & JS
+     */
+    public static function enqueue_assets(): void {
+        if (!is_product()) {
+            return;
+        }
+
+        global $product;
+
+        if (!$product || !class_exists('LVK_Helper') || !LVK_Helper::is_event_product($product)) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'lvk-tshirt-css',
+            LVK_URL . 'assets/css/tshirt-order.css',
+            [],
+            filemtime(LVK_DIR . '/assets/css/tshirt-order.css')
+        );
+
+        wp_enqueue_script(
+            'lvk-tshirt-js',
+            LVK_URL . 'assets/js/tshirt-order.js',
+            [],
+            filemtime(LVK_DIR . '/assets/js/tshirt-order.js'),
+            true
+        );
+    }
+
+    /**
      * Tampilkan UI modern (Pills & Size Chart)
      */
     public static function render_tshirt_ui($product): void {
@@ -42,48 +78,12 @@ final class LVK_Tshirt_Order {
         }
 
         ?>
-        <div class="lv-meta-item lvk-tshirt-ui-container" style="border-top: 1px dashed #eaeaea; margin-top: 15px; padding-top: 15px;">
-            <span class="lv-meta-label" style="display: block; margin-bottom: 8px;">👕 Order Baju Kepanitiaan (Opsional)</span>
+        <div class="lv-meta-item lvk-tshirt-ui-container">
+            <span class="lv-meta-label">👕 Order Baju Kepanitiaan (Opsional)</span>
             <div class="lv-meta-value">
-                <style>
-                    .lvk-tshirt-options {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 8px;
-                        margin-bottom: 10px;
-                    }
-                    .lvk-tshirt-pill {
-                        padding: 8px 14px;
-                        border: 2px solid #ddd;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-size: 13px;
-                        font-weight: 600;
-                        color: #666;
-                        background: #fff;
-                        transition: all 0.2s ease;
-                        user-select: none;
-                    }
-                    .lvk-tshirt-pill:hover {
-                        border-color: #007cba;
-                        color: #007cba;
-                    }
-                    .lvk-tshirt-pill.active {
-                        border-color: #007cba;
-                        background: #007cba;
-                        color: #fff;
-                    }
-                    .lvk-tshirt-pill small {
-                        display: block;
-                        font-size: 11px;
-                        font-weight: normal;
-                        opacity: 0.85;
-                        margin-top: 2px;
-                    }
-                </style>
-
                 <div class="lvk-tshirt-options" id="lvk-tshirt-pills-container">
-                    <div class="lvk-tshirt-pill active" data-value="">
+                    <!-- Default tidak ada yang active -->
+                    <div class="lvk-tshirt-pill" data-value="Tidak Beli">
                         Tidak Pesan
                     </div>
                     <div class="lvk-tshirt-pill" data-value="S">
@@ -100,53 +100,14 @@ final class LVK_Tshirt_Order {
                     </div>
                 </div>
 
-                <a href="#" id="lvk-show-size-chart" style="font-size: 13px; text-decoration: underline; color: #007cba; display: inline-block; margin-top: 4px;">Lihat Desain & Size Chart</a>
+                <a href="#" id="lvk-show-size-chart" class="lvk-show-size-chart-link">Lihat Desain & Size Chart</a>
 
-                <!-- Modal / Image Placeholder (Tersembunyi by default) -->
-                <div id="lvk-size-chart-container" style="display: none; margin-top: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fafafa;">
-                    <img src="https://placehold.co/600x400/eeeeee/333333?text=Gambar+Baju+%26+Size+Chart" alt="Size Chart" style="max-width: 100%; height: auto; border-radius: 4px; display: block;" />
+                <div id="lvk-size-chart-container" class="lvk-size-chart-wrapper">
+                    <p class="lvk-size-chart-title">Desain & Size Chart (Placeholder)</p>
+                    <img src="https://placehold.co/600x400/eeeeee/333333?text=Gambar+Baju+%26+Size+Chart" alt="Size Chart" />
                 </div>
             </div>
         </div>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var pills = document.querySelectorAll('.lvk-tshirt-pill');
-                var hiddenInput = document.getElementById('lvk_tshirt_size_hidden');
-                
-                // Pill Click Logic
-                pills.forEach(function(pill) {
-                    pill.addEventListener('click', function() {
-                        // Hapus active class dari semua pill
-                        pills.forEach(p => p.classList.remove('active'));
-                        // Tambahkan active class ke pill yang diklik
-                        this.classList.add('active');
-                        
-                        // Sinkronisasi ke hidden input jika ada
-                        if (hiddenInput) {
-                            hiddenInput.value = this.getAttribute('data-value');
-                        }
-                    });
-                });
-
-                // Size Chart Toggle Logic
-                var btnChart = document.getElementById('lvk-show-size-chart');
-                var chartContainer = document.getElementById('lvk-size-chart-container');
-                
-                if (btnChart && chartContainer) {
-                    btnChart.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        if (chartContainer.style.display === 'none') {
-                            chartContainer.style.display = 'block';
-                            btnChart.innerText = 'Tutup Desain & Size Chart';
-                        } else {
-                            chartContainer.style.display = 'none';
-                            btnChart.innerText = 'Lihat Desain & Size Chart';
-                        }
-                    });
-                }
-            });
-        </script>
         <?php
     }
 
@@ -158,8 +119,23 @@ final class LVK_Tshirt_Order {
         if (!$product || !class_exists('LVK_Helper') || !LVK_Helper::is_event_product($product)) {
             return;
         }
-        // Input ini akan dikirim saat klik "Daftar" (Add to Cart)
+        // Input wajib diisi sebelum add to cart
         echo '<input type="hidden" name="lvk_tshirt_size" id="lvk_tshirt_size_hidden" value="">';
+    }
+
+    /**
+     * Validasi wajib pilih opsi baju sebelum pendaftaran (add to cart)
+     */
+    public static function validate_add_to_cart($passed, $product_id, $quantity) {
+        $product = wc_get_product($product_id);
+        
+        if ($product && class_exists('LVK_Helper') && LVK_Helper::is_event_product($product)) {
+            if (!isset($_POST['lvk_tshirt_size']) || $_POST['lvk_tshirt_size'] === '') {
+                wc_add_notice('Silakan pilih opsi Order Baju (atau klik "Tidak Pesan") sebelum mendaftar.', 'error');
+                return false;
+            }
+        }
+        return $passed;
     }
 
     /**
@@ -168,6 +144,12 @@ final class LVK_Tshirt_Order {
     public static function add_cart_item_data($cart_item_data, $product_id) {
         if (isset($_POST['lvk_tshirt_size']) && !empty($_POST['lvk_tshirt_size'])) {
             $size = sanitize_text_field(wp_unslash($_POST['lvk_tshirt_size']));
+            
+            // Jika memilih Tidak Beli, tidak perlu masuk fee atau meta
+            if ($size === 'Tidak Beli') {
+                return $cart_item_data;
+            }
+            
             $cart_item_data['lvk_tshirt_size'] = $size;
             
             // Tentukan tambahan harga berdasarkan ukuran

@@ -1,0 +1,85 @@
+/* =========================================================
+   TSHIRT ORDER UI
+========================================================= */
+
+.lvk-tshirt-ui-container {
+    border-top: 1px dashed #eaeaea;
+    margin-top: 15px;
+    padding-top: 15px;
+}
+
+.lvk-tshirt-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.lvk-tshirt-pill {
+    padding: 8px 14px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    background: #fff;
+    transition: all 0.2s ease;
+    user-select: none;
+    text-align: center;
+}
+
+.lvk-tshirt-pill:hover {
+    border-color: #007cba;
+    color: #007cba;
+}
+
+.lvk-tshirt-pill.active {
+    border-color: #007cba;
+    background: #007cba;
+    color: #fff;
+}
+
+.lvk-tshirt-pill.active small {
+    color: #fff;
+}
+
+.lvk-tshirt-pill small {
+    display: block;
+    font-size: 11px;
+    font-weight: normal;
+    opacity: 0.85;
+    margin-top: 2px;
+    color: #666;
+}
+
+.lvk-show-size-chart-link {
+    font-size: 13px;
+    text-decoration: underline;
+    color: #007cba;
+    display: inline-block;
+    margin-top: 4px;
+}
+
+.lvk-size-chart-wrapper {
+    display: none;
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+.lvk-size-chart-wrapper img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    display: block;
+}
+
+.lvk-size-chart-title {
+    font-size: 12px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #555;
+}
