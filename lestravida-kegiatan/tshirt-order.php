@@ -35,8 +35,8 @@ final class LVK_Tshirt_Order {
         // Simpan opsi baju ke order meta (nota/struk admin)
         add_action('woocommerce_checkout_create_order_line_item', [__CLASS__, 'add_order_item_meta'], 10, 4);
 
-        // Tambahkan harga ekstra ke total cart sebagai Fee
-        add_action('woocommerce_cart_calculate_fees', [__CLASS__, 'calculate_fees'], 10, 1);
+        // Gabungkan harga baju ke harga item produk (menggantikan sistem Fee terpisah)
+        add_action('woocommerce_before_calculate_totals', [__CLASS__, 'adjust_cart_item_price'], 10, 1);
     }
 
     /**
@@ -198,24 +198,29 @@ final class LVK_Tshirt_Order {
     }
 
     /**
-     * Tambahkan total harga item baju sebagai Fee ke cart
+     * Gabungkan total harga baju ke harga produk di cart.
+     * Ini mengatasi bug di mini-cart di mana fee terpisah tidak dihitung ke subtotal.
      */
-    public static function calculate_fees($cart) {
+    public static function adjust_cart_item_price($cart) {
         if (is_admin() && !defined('DOING_AJAX')) {
             return;
         }
 
-        $total_tshirt_fee = 0;
-
-        foreach ($cart->get_cart() as $cart_item) {
-            if (isset($cart_item['lvk_tshirt_fee'])) {
-                $qty = (int) $cart_item['quantity'];
-                $total_tshirt_fee += ($cart_item['lvk_tshirt_fee'] * $qty);
-            }
+        // Hindari infinite loop atau kalkulasi ganda
+        if (did_action('woocommerce_before_calculate_totals') >= 2) {
+            return;
         }
 
-        if ($total_tshirt_fee > 0) {
-            $cart->add_fee('Tambahan Order Baju', $total_tshirt_fee, true);
+        foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+            if (isset($cart_item['lvk_tshirt_fee'])) {
+                // Ambil harga dasar asli dari produk, bukan dari objek yang mungkin sudah termanipulasi
+                $original_product = wc_get_product($cart_item['product_id']);
+                if ($original_product) {
+                    $base_price = (float) $original_product->get_price();
+                    $new_price = $base_price + $cart_item['lvk_tshirt_fee'];
+                    $cart_item['data']->set_price($new_price);
+                }
+            }
         }
     }
 }
