@@ -13,8 +13,9 @@ final class LVK_Checkout_Fee {
      * =========================================================
      * CONFIG
      * =========================================================
-     */
-    const EXTRA_AMOUNT = 4000;
+    public static function get_extra_amount() {
+        return (float) get_option('lvc_checkout_fee_amount', 4000);
+    }
 
     /**
      * =========================================================
@@ -43,7 +44,7 @@ final class LVK_Checkout_Fee {
             return $price;
         }
 
-        return $price + self::EXTRA_AMOUNT;
+        return $price + self::get_extra_amount();
     }
 
     /**

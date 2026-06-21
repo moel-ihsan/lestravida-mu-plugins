@@ -7,8 +7,6 @@ if (!defined('ABSPATH')) exit;
 
 final class LVC_Checkout_Fields {
 
-    private const MIN_EVENT_GAP_DAYS = 7;
-
     public static function customize_fields($fields) {
         unset($fields['billing']['billing_company']);
         unset($fields['billing']['billing_address_1']);
@@ -248,7 +246,7 @@ final class LVC_Checkout_Fields {
             for ($j = $i + 1; $j < count($events); $j++) {
                 $diff = abs($events[$i]['timestamp'] - $events[$j]['timestamp']) / DAY_IN_SECONDS;
 
-                if ($diff < self::MIN_EVENT_GAP_DAYS) {
+                if ($diff < (int) get_option('lvc_min_event_gap_days', 7)) {
                     $errors->add(
                         'lvc_event_gap',
                         'Kamu tidak bisa membeli dua event yang jadwalnya terlalu dekat. Minimal jarak antar kegiatan adalah 7 hari.'
@@ -360,7 +358,7 @@ final class LVC_Checkout_Fields {
     }
 
     private static function get_ig_daerah_label(int $product_id): string {
-        $default = '@estravidaaceh';
+        $default = get_option('lvc_default_ig_daerah', '@lestravidaaceh');
 
         if (!class_exists('LVK_Helper') || !defined('LVK_Helper::META_IG_DAERAH')) {
             return $default;
