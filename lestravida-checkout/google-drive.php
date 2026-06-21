@@ -9,6 +9,15 @@ final class LVC_Google_Drive {
 
     const CREDENTIAL_FILE = 'google-oauth.json';
 
+    public static function log_error($message): void {
+        error_log('LestraVida Google Drive Error: ' . $message);
+        
+        $email = get_option('lvc_google_drive_alert_email', '');
+        if (is_email($email)) {
+            wp_mail($email, 'LestraVida Google Drive Alert', $message);
+        }
+    }
+
     private static function root_folder_id(): string {
         return function_exists('lvc_config')
             ? (string) lvc_config('google_drive.root_folder_id', '')
@@ -66,10 +75,17 @@ final class LVC_Google_Drive {
 
         if (is_wp_error($response)) {
             self::$last_error = $response->get_error_message();
+            self::log_error("Request Token Error: " . self::$last_error);
             return '';
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (empty($body['access_token'])) {
+            self::$last_error = "Invalid token response.";
+            self::log_error("Token Error Response: " . print_r($body, true));
+            return '';
+        }
 
         self::$token = $body['access_token'] ?? '';
 
