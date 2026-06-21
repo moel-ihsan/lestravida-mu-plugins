@@ -47,7 +47,8 @@ final class LVK_Tshirt_Order {
             return;
         }
 
-        global $product;
+        $product_id = get_the_ID();
+        $product = wc_get_product($product_id);
 
         if (!$product || !class_exists('LVK_Helper') || !LVK_Helper::is_event_product($product)) {
             return;
@@ -70,6 +71,18 @@ final class LVK_Tshirt_Order {
     }
 
     /**
+     * Data master opsi baju (agar tidak hardcode)
+     */
+    public static function get_tshirt_options(): array {
+        return apply_filters('lvk_tshirt_options', [
+            'S'    => ['label' => 'S', 'price' => 88000, 'display_price' => '+88Rb'],
+            'M'    => ['label' => 'M', 'price' => 88000, 'display_price' => '+88Rb'],
+            'L'    => ['label' => 'L', 'price' => 88000, 'display_price' => '+88Rb'],
+            '> XL' => ['label' => '> XL', 'price' => 98000, 'display_price' => '+98Rb'],
+        ]);
+    }
+
+    /**
      * Tampilkan UI modern (Pills & Size Chart)
      */
     public static function render_tshirt_ui($product): void {
@@ -77,6 +90,7 @@ final class LVK_Tshirt_Order {
             return;
         }
 
+        $options = self::get_tshirt_options();
         ?>
         <div class="lv-meta-item lvk-tshirt-ui-container">
             <span class="lv-meta-label">👕 Order Baju Kepanitiaan (Opsional)</span>
@@ -86,18 +100,11 @@ final class LVK_Tshirt_Order {
                     <div class="lvk-tshirt-pill" data-value="Tidak Beli">
                         Tidak Pesan
                     </div>
-                    <div class="lvk-tshirt-pill" data-value="S">
-                        S <small>+88Rb</small>
-                    </div>
-                    <div class="lvk-tshirt-pill" data-value="M">
-                        M <small>+88Rb</small>
-                    </div>
-                    <div class="lvk-tshirt-pill" data-value="L">
-                        L <small>+88Rb</small>
-                    </div>
-                    <div class="lvk-tshirt-pill" data-value="> XL">
-                        > XL <small>+98Rb</small>
-                    </div>
+                    <?php foreach ($options as $key => $data): ?>
+                        <div class="lvk-tshirt-pill" data-value="<?php echo esc_attr($key); ?>">
+                            <?php echo esc_html($data['label']); ?> <small><?php echo esc_html($data['display_price']); ?></small>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
 
                 <a href="#" id="lvk-show-size-chart" class="lvk-show-size-chart-link">Lihat Desain & Size Chart</a>
@@ -150,17 +157,16 @@ final class LVK_Tshirt_Order {
                 return $cart_item_data;
             }
             
-            $cart_item_data['lvk_tshirt_size'] = $size;
+            $options = self::get_tshirt_options();
             
-            // Tentukan tambahan harga berdasarkan ukuran
-            $extra_fee = 88000;
-            if ($size === '> XL') {
-                $extra_fee = 98000;
+            // Validasi apakah ukuran yang dikirim valid
+            if (isset($options[$size])) {
+                $cart_item_data['lvk_tshirt_size'] = $size;
+                $cart_item_data['lvk_tshirt_fee'] = $options[$size]['price'];
+                
+                // Buat kunci unik agar item di cart tidak digabung jika pesan ukuran beda
+                $cart_item_data['unique_key'] = md5(microtime() . rand());
             }
-            $cart_item_data['lvk_tshirt_fee'] = $extra_fee;
-            
-            // Buat kunci unik agar item di cart tidak digabung jika pesan ukuran beda
-            $cart_item_data['unique_key'] = md5(microtime() . rand());
         }
         return $cart_item_data;
     }

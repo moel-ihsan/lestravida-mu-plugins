@@ -33,4 +33,32 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    var addToCartBtn = document.querySelector('.single_add_to_cart_button');
+    var pillsContainer = document.getElementById('lvk-tshirt-pills-container');
+    
+    if (addToCartBtn && hiddenInput && pillsContainer) {
+        addToCartBtn.addEventListener('click', function(e) {
+            if (hiddenInput.value === '') {
+                e.preventDefault(); // Stop submission
+                
+                // Scroll to the options
+                pillsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Flash visual warning
+                var originalBorder = pillsContainer.style.border;
+                pillsContainer.style.border = '2px solid #ef4444';
+                pillsContainer.style.padding = '8px';
+                pillsContainer.style.borderRadius = '8px';
+                
+                setTimeout(function() {
+                    pillsContainer.style.border = originalBorder;
+                    pillsContainer.style.padding = '0';
+                }, 2500);
+                
+                // Show alert
+                alert('Penting: Silakan pilih opsi Order Baju Kepanitiaan (atau klik "Tidak Pesan") terlebih dahulu sebelum mendaftar.');
+            }
+        });
+    }
 });
