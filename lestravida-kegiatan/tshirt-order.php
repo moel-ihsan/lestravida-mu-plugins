@@ -93,7 +93,7 @@ final class LVK_Tshirt_Order {
         $options = self::get_tshirt_options();
         ?>
         <div class="lv-meta-item lvk-tshirt-ui-container">
-            <span class="lv-meta-label">👕 Order Baju Kepanitiaan (Opsional)</span>
+            <span class="lv-meta-label">Order Baju Kegiatan</span>
             <div class="lv-meta-value">
                 <div class="lvk-tshirt-options" id="lvk-tshirt-pills-container">
                     <!-- Default tidak ada yang active -->
@@ -105,6 +105,10 @@ final class LVK_Tshirt_Order {
                             <?php echo esc_html($data['label']); ?> <small><?php echo esc_html($data['display_price']); ?></small>
                         </div>
                     <?php endforeach; ?>
+                </div>
+                
+                <div id="lvk-tshirt-validation-msg" style="display: none; color: #dc2626; font-size: 13px; margin-top: 6px; margin-bottom: 10px; font-weight: 500;">
+                    ⚠️ Wajib pilih salah satu opsi di atas sebelum mendaftar.
                 </div>
 
                 <a href="#" id="lvk-show-size-chart" class="lvk-show-size-chart-link">Lihat Desain & Size Chart</a>

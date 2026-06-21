@@ -36,29 +36,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var addToCartBtn = document.querySelector('.single_add_to_cart_button');
     var pillsContainer = document.getElementById('lvk-tshirt-pills-container');
+    var validationMsg = document.getElementById('lvk-tshirt-validation-msg');
     
     if (addToCartBtn && hiddenInput && pillsContainer) {
         addToCartBtn.addEventListener('click', function(e) {
             if (hiddenInput.value === '') {
                 e.preventDefault(); // Stop submission
                 
-                // Scroll to the options
+                // Tampilkan pesan error
+                if (validationMsg) {
+                    validationMsg.style.display = 'block';
+                }
+                
+                // Tambahkan animasi shake
+                pillsContainer.classList.remove('lvk-error-shake');
+                void pillsContainer.offsetWidth; // trigger reflow
+                pillsContainer.classList.add('lvk-error-shake');
+                
+                // Scroll ke opsi baju dengan efek halus
                 pillsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
-                // Flash visual warning
-                var originalBorder = pillsContainer.style.border;
-                pillsContainer.style.border = '2px solid #ef4444';
-                pillsContainer.style.padding = '8px';
-                pillsContainer.style.borderRadius = '8px';
-                
+                // Hilangkan class setelah animasi selesai
                 setTimeout(function() {
-                    pillsContainer.style.border = originalBorder;
-                    pillsContainer.style.padding = '0';
-                }, 2500);
-                
-                // Show alert
-                alert('Penting: Silakan pilih opsi Order Baju Kepanitiaan (atau klik "Tidak Pesan") terlebih dahulu sebelum mendaftar.');
+                    pillsContainer.classList.remove('lvk-error-shake');
+                }, 500);
             }
         });
+        
+        // Sembunyikan pesan error otomatis jika user akhirnya memilih salah satu opsi
+        if (pills.length > 0) {
+            pills.forEach(function(pill) {
+                pill.addEventListener('click', function() {
+                    if (validationMsg) {
+                        validationMsg.style.display = 'none';
+                    }
+                });
+            });
+        }
     }
 });
