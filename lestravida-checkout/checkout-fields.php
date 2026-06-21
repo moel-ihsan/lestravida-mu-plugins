@@ -264,6 +264,24 @@ final class LVC_Checkout_Fields {
 
         foreach (WC()->cart->get_cart() as $cart_item) {
             $product_id = (int) ($cart_item['product_id'] ?? 0);
+            
+            // Bypass gap date for Muda Mudi Mengabdi
+            $terms = get_the_terms($product_id, 'product_cat');
+            $is_mmm = false;
+            
+            if ($terms && !is_wp_error($terms)) {
+                foreach ($terms as $term) {
+                    if ($term->slug === LVK_Helper::EVENT_CATEGORY || LVK_Helper::is_mmm_top_level($term)) {
+                        $is_mmm = true;
+                        break;
+                    }
+                }
+            }
+            
+            if ($is_mmm) {
+                continue;
+            }
+
             $tanggal = get_post_meta($product_id, LVK_Helper::META_TANGGAL, true);
 
             if (!$product_id || !$tanggal) continue;
