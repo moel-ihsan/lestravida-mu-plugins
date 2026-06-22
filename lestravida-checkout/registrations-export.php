@@ -122,37 +122,59 @@ final class LVC_Registrations_Export {
     private static function render_summary(): void {
         $summary = [];
 
-        foreach (self::get_orders(['limit' => -1]) as $order) {
-            foreach (self::order_product_ids($order) as $product_id) {
-                if (!self::is_registration_closed($product_id)) {
-                    continue;
+        $page = 1;
+        while (true) {
+            $orders = self::get_orders([
+                'limit' => 100,
+                'paged' => $page,
+            ]);
+
+            if (empty($orders)) {
+                break;
+            }
+
+            foreach ($orders as $order) {
+                foreach (self::order_product_ids($order) as $product_id) {
+                    if (!self::is_registration_closed($product_id)) {
+                        continue;
+                    }
+
+                    if (!isset($summary[$product_id])) {
+                        $ctx = self::product_context($product_id);
+
+                        $summary[$product_id] = [
+                            'title'      => $ctx['title'],
+                            'category'   => $ctx['category'],
+                            'chapter'    => $ctx['chapter'],
+                            'batch'      => $ctx['batch'],
+                            'event_date' => $ctx['event_date'],
+                            'total'      => 0,
+                            'completed'  => 0,
+                            'processing' => 0,
+                            'pending'    => 0,
+                            'on-hold'    => 0,
+                        ];
+                    }
+
+                    $summary[$product_id]['total']++;
+
+                    $status = $order->get_status();
+
+                    if (isset($summary[$product_id][$status])) {
+                        $summary[$product_id][$status]++;
+                    }
                 }
 
-                if (!isset($summary[$product_id])) {
-                    $ctx = self::product_context($product_id);
-
-                    $summary[$product_id] = [
-                        'title'      => $ctx['title'],
-                        'category'   => $ctx['category'],
-                        'chapter'    => $ctx['chapter'],
-                        'batch'      => $ctx['batch'],
-                        'event_date' => $ctx['event_date'],
-                        'total'      => 0,
-                        'completed'  => 0,
-                        'processing' => 0,
-                        'pending'    => 0,
-                        'on-hold'    => 0,
-                    ];
-                }
-
-                $summary[$product_id]['total']++;
-
-                $status = $order->get_status();
-
-                if (isset($summary[$product_id][$status])) {
-                    $summary[$product_id][$status]++;
+                if (method_exists($order, 'get_id')) {
+                    $order_id = $order->get_id();
+                    wp_cache_delete($order_id, 'posts');
+                    wp_cache_delete($order_id, 'post_meta');
+                    wp_cache_delete($order_id, 'wc_orders');
                 }
             }
+
+            unset($orders);
+            $page++;
         }
 
         echo '<p class="description">Rekap hanya ditampilkan untuk event yang pendaftarannya sudah tutup.</p>';
@@ -578,58 +600,80 @@ final class LVC_Registrations_Export {
 
         fputcsv($output, $headers);
 
-        foreach (self::get_orders(['limit' => -1]) as $order) {
-            foreach (self::order_product_ids($order) as $order_product_id) {
-                if ($product_id && $order_product_id !== $product_id) {
-                    continue;
-                }
+        $page = 1;
+        while (true) {
+            $orders = self::get_orders([
+                'limit' => 100,
+                'paged' => $page,
+            ]);
 
-                if (!self::is_registration_closed($order_product_id)) {
-                    continue;
-                }
+            if (empty($orders)) {
+                break;
+            }
 
-                $drive = self::drive_files_for_product($order, $order_product_id);
-                $ctx   = self::product_context($order_product_id);
+            foreach ($orders as $order) {
+                foreach (self::order_product_ids($order) as $order_product_id) {
+                    if ($product_id && $order_product_id !== $product_id) {
+                        continue;
+                    }
 
-                $tshirt_size = '-';
-                if ($offer_tshirt) {
-                    foreach ($order->get_items() as $item) {
-                        if ((int) $item->get_product_id() === $order_product_id) {
-                            $meta = $item->get_meta('Tambahan Baju');
-                            if (!empty($meta)) {
-                                $tshirt_size = str_replace('Ukuran ', '', $meta);
+                    if (!self::is_registration_closed($order_product_id)) {
+                        continue;
+                    }
+
+                    $drive = self::drive_files_for_product($order, $order_product_id);
+                    $ctx   = self::product_context($order_product_id);
+
+                    $tshirt_size = '-';
+                    if ($offer_tshirt) {
+                        foreach ($order->get_items() as $item) {
+                            if ((int) $item->get_product_id() === $order_product_id) {
+                                $meta = $item->get_meta('Tambahan Baju');
+                                if (!empty($meta)) {
+                                    $tshirt_size = str_replace('Ukuran ', '', $meta);
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
+
+                    $row_data = [
+                        $order->get_id(),
+                        $order->get_formatted_billing_full_name(),
+                        $order->get_billing_email(),
+                        $order->get_billing_phone(),
+                        $order->get_meta('_billing_age'),
+                        $order->get_meta('_billing_school'),
+                        $order->get_meta('_billing_instagram'),
+                        $order->get_meta('_billing_source_info'),
+                        $ctx['title'],
+                        wc_format_datetime($order->get_date_created()),
+                        wc_get_order_status_name($order->get_status()),
+                    ];
+
+                    if ($offer_tshirt) {
+                        $row_data[] = $tshirt_size;
+                    }
+
+                    $row_data = array_merge($row_data, [
+                        $drive['bukti_lv'],
+                        $drive['bukti_lvdaerah'],
+                        $drive['bukti_share'],
+                    ]);
+
+                    fputcsv($output, $row_data);
                 }
 
-                $row_data = [
-                    $order->get_id(),
-                    $order->get_formatted_billing_full_name(),
-                    $order->get_billing_email(),
-                    $order->get_billing_phone(),
-                    $order->get_meta('_billing_age'),
-                    $order->get_meta('_billing_school'),
-                    $order->get_meta('_billing_instagram'),
-                    $order->get_meta('_billing_source_info'),
-                    $ctx['title'],
-                    wc_format_datetime($order->get_date_created()),
-                    wc_get_order_status_name($order->get_status()),
-                ];
-
-                if ($offer_tshirt) {
-                    $row_data[] = $tshirt_size;
+                if (method_exists($order, 'get_id')) {
+                    $order_id = $order->get_id();
+                    wp_cache_delete($order_id, 'posts');
+                    wp_cache_delete($order_id, 'post_meta');
+                    wp_cache_delete($order_id, 'wc_orders');
                 }
-
-                $row_data = array_merge($row_data, [
-                    $drive['bukti_lv'],
-                    $drive['bukti_lvdaerah'],
-                    $drive['bukti_share'],
-                ]);
-
-                fputcsv($output, $row_data);
             }
+
+            unset($orders);
+            $page++;
         }
 
         fclose($output);
