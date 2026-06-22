@@ -53,20 +53,26 @@ class LVCERT_Admin_Settings {
 
         echo '<div class="options_group">';
         
-        // URL Template (Media Uploader)
+        // URL Template (Media Uploader + Custom Upload)
         $template_url = get_post_meta($post->ID, '_lvk_cert_template_url', true);
-        echo '<p class="form-field _lvk_cert_template_url_field">';
-        echo '<label for="_lvk_cert_template_url">' . __('URL Template (JPG/PNG)', 'lestravida') . '</label>';
-        echo '<input type="text" class="short" style="" name="_lvk_cert_template_url" id="_lvk_cert_template_url" value="' . esc_attr($template_url) . '" placeholder="https://..."> ';
-        echo '<a href="#" class="button lvk-upload-cert-btn" data-target="_lvk_cert_template_url">Upload Gambar</a>';
-        echo '<span class="description">' . __('Upload gambar di Media lalu paste URL-nya di sini.', 'lestravida') . '</span>';
+        echo '<p class="form-field _lvk_cert_template_url_field" style="background:#f9f9f9; padding:15px; border:1px solid #ddd; border-radius:4px;">';
+        echo '<label for="_lvk_cert_template_url" style="font-weight:bold;">' . __('Template Sertifikat (JPG/PNG)', 'lestravida') . '</label>';
+        
+        if ($template_url) {
+            echo '<img src="' . esc_url($template_url) . '" style="max-width:300px; display:block; margin:10px 0; border:1px solid #ccc;" />';
+        }
+
+        echo '<span class="description" style="display:block; margin-bottom:5px; margin-left:0;">' . __('Opsi 1: Masukkan URL Gambar / Google Drive Link (Otomatis Download)', 'lestravida') . '</span>';
+        echo '<input type="text" class="short" style="width:100%; max-width:400px;" name="_lvk_cert_template_url" id="_lvk_cert_template_url" value="' . esc_attr($template_url) . '" placeholder="https://..."> ';
+        echo '<a href="#" class="button lvk-upload-cert-btn" data-target="_lvk_cert_template_url" style="margin-top:5px;">Pilih dari Media Library</a>';
+        
+        echo '<br><br><span style="font-weight:bold; color:#d63638;">Atau (Sangat Disarankan agar 100% Tajam):</span><br>';
+        echo '<span class="description" style="display:block; margin-bottom:5px; margin-left:0;">' . __('Opsi 2: Upload langsung dari komputer Anda (Bypass WP Compression)', 'lestravida') . '</span>';
+        echo '<input type="file" name="lvk_custom_cert_upload" accept="image/png, image/jpeg" style="margin-top:5px; background:#fff; padding:5px; border:1px solid #ccc;">';
         echo '</p>';
 
-        echo '<p class="form-field">';
-        echo '<label>' . __('Atau Upload Mentahan (Bypass WP)', 'lestravida') . '</label>';
-        echo '<input type="file" name="lvk_custom_cert_upload" accept="image/png, image/jpeg" style="margin-top:5px;">';
-        echo '<span class="description">' . __('Pilih file JPG/PNG dari komputer Anda. Opsi ini 100% mencegah penurunan resolusi oleh WordPress.', 'lestravida') . '</span>';
-        echo '</p>';
+        // Script untuk memastikan form bisa mengirim file (PENTING)
+        echo '<script>jQuery(document).ready(function($){ $("form#post").attr("enctype", "multipart/form-data"); });</script>';
 
         echo '<div style="margin-bottom:15px; border-bottom:1px solid #eee;"></div>';
 
