@@ -103,6 +103,14 @@ class LVCERT_Generator {
             wp_die(__('Format template sertifikat tidak valid.', 'lestravida'));
         }
 
+        // Pastikan canvas adalah truecolor (Penting untuk PNG dari Canva yang kadang berupa Indexed-Color/Palette)
+        if (!imageistruecolor($image)) {
+            imagepalettetotruecolor($image);
+        }
+        
+        // Pastikan alpha blending aktif sebelum menggambar teks
+        imagealphablending($image, true);
+
         // Font file path
         $font_path = LVCERT_DIR . '/fonts/Luxia-Display.otf'; // Default Bundled Font
         $temp_font = false;

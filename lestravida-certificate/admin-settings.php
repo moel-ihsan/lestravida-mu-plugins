@@ -53,21 +53,19 @@ class LVCERT_Admin_Settings {
 
         echo '<div class="options_group">';
         
-        // URL Template (Media Uploader + Custom Upload)
+        // URL Template (Custom Upload Only)
         $template_url = get_post_meta($post->ID, '_lvk_cert_template_url', true);
         echo '<p class="form-field _lvk_cert_template_url_field" style="background:#f9f9f9; padding:15px; border:1px solid #ddd; border-radius:4px;">';
-        echo '<label for="_lvk_cert_template_url" style="font-weight:bold;">' . __('Template Sertifikat (JPG/PNG)', 'lestravida') . '</label>';
+        echo '<label style="font-weight:bold;">' . __('Template Sertifikat (JPG/PNG)', 'lestravida') . '</label>';
         
         if ($template_url) {
             echo '<img src="' . esc_url($template_url) . '" style="max-width:300px; display:block; margin:10px 0; border:1px solid #ccc;" />';
         }
 
-        echo '<span class="description" style="display:block; margin-bottom:5px; margin-left:0;">' . __('Opsi 1: Masukkan URL Gambar / Google Drive Link (Otomatis Download)', 'lestravida') . '</span>';
-        echo '<input type="text" class="short" style="width:100%; max-width:400px;" name="_lvk_cert_template_url" id="_lvk_cert_template_url" value="' . esc_attr($template_url) . '" placeholder="https://..."> ';
-        echo '<a href="#" class="button lvk-upload-cert-btn" data-target="_lvk_cert_template_url" style="margin-top:5px;">Pilih dari Media Library</a>';
+        // Hidden input agar URL lama tetap tersimpan jika admin tidak mengupload file baru
+        echo '<input type="hidden" name="_lvk_cert_template_url" id="_lvk_cert_template_url" value="' . esc_attr($template_url) . '">';
         
-        echo '<br><br><span style="font-weight:bold; color:#d63638;">Atau (Sangat Disarankan agar 100% Tajam):</span><br>';
-        echo '<span class="description" style="display:block; margin-bottom:5px; margin-left:0;">' . __('Opsi 2: Upload langsung dari komputer Anda (Bypass WP Compression)', 'lestravida') . '</span>';
+        echo '<span class="description" style="display:block; margin-bottom:5px; margin-left:0;">' . __('Pilih file JPG/PNG beresolusi tinggi dari komputer Anda.', 'lestravida') . '</span>';
         echo '<input type="file" name="lvk_custom_cert_upload" accept="image/png, image/jpeg" style="margin-top:5px; background:#fff; padding:5px; border:1px solid #ccc;">';
         echo '</p>';
 
