@@ -37,6 +37,54 @@ final class LVK_Tshirt_Order {
 
         // Gabungkan harga baju ke harga item produk (menggantikan sistem Fee terpisah)
         add_action('woocommerce_before_calculate_totals', [__CLASS__, 'adjust_cart_item_price'], 10, 1);
+
+        // Admin Metabox (Checkbox untuk mengaktifkan fitur baju per produk)
+        add_action('woocommerce_product_options_general_product_data', [__CLASS__, 'add_admin_tshirt_checkbox']);
+        add_action('woocommerce_process_product_meta', [__CLASS__, 'save_admin_tshirt_checkbox']);
+
+        // Filter tombol "Gabung Sekarang" di halaman katalog (Loop)
+        add_filter('woocommerce_loop_add_to_cart_link', [__CLASS__, 'modify_loop_button_link'], 10, 3);
+    }
+
+    /**
+     * Tampilkan checkbox di wp-admin > Product Data > General
+     */
+    public static function add_admin_tshirt_checkbox() {
+        woocommerce_wp_checkbox([
+            'id'            => '_lvk_offer_tshirt',
+            'wrapper_class' => 'show_if_simple',
+            'label'         => __('Tawarkan Pembelian Baju (Opsional)', 'woocommerce'),
+            'description'   => __('Jika dicentang, form pemesanan baju akan muncul di halaman kegiatan ini.', 'woocommerce'),
+            'desc_tip'      => true,
+        ]);
+    }
+
+    /**
+     * Simpan nilai checkbox dari wp-admin
+     */
+    public static function save_admin_tshirt_checkbox($post_id) {
+        $offer_tshirt = isset($_POST['_lvk_offer_tshirt']) ? 'yes' : 'no';
+        update_post_meta($post_id, '_lvk_offer_tshirt', $offer_tshirt);
+    }
+
+    /**
+     * Ubah fungsi tombol "Gabung Sekarang" di halaman Loop menjadi "Lihat Detail"
+     * Untuk produk yang mewajibkan input opsi baju
+     */
+    public static function modify_loop_button_link($link, $product, $args) {
+        if ($product && get_post_meta($product->get_id(), '_lvk_offer_tshirt', true) === 'yes') {
+            $class = isset($args['class']) ? str_replace('ajax_add_to_cart', '', $args['class']) : 'button';
+            
+            return sprintf(
+                '<a href="%s" data-quantity="%s" class="%s" %s>%s</a>',
+                esc_url($product->get_permalink()),
+                esc_attr(isset($args['quantity']) ? $args['quantity'] : 1),
+                esc_attr($class),
+                isset($args['attributes']) ? wc_implode_html_attributes($args['attributes']) : '',
+                esc_html('Lihat Detail')
+            );
+        }
+        return $link;
     }
 
     /**
@@ -77,8 +125,8 @@ final class LVK_Tshirt_Order {
         $price_normal = (int) get_option('lvc_tshirt_price_normal', 88000);
         $price_extra  = (int) get_option('lvc_tshirt_price_extra', 98000);
 
-        $display_normal = '+' . ($price_normal / 1000) . 'Rb';
-        $display_extra  = '+' . ($price_extra / 1000) . 'Rb';
+        $display_normal = '+' . ($price_normal / 1000) . 'K';
+        $display_extra  = '+' . ($price_extra / 1000) . 'K';
 
         return apply_filters('lvk_tshirt_options', [
             'S'    => ['label' => 'S', 'price' => $price_normal, 'display_price' => $display_normal],
@@ -93,6 +141,11 @@ final class LVK_Tshirt_Order {
      */
     public static function render_tshirt_ui($product): void {
         if (!$product || !class_exists('LVK_Helper') || !LVK_Helper::is_event_product($product)) {
+            return;
+        }
+
+        // Cek apakah produk ini mengaktifkan penawaran baju
+        if (get_post_meta($product->get_id(), '_lvk_offer_tshirt', true) !== 'yes') {
             return;
         }
 
@@ -136,6 +189,12 @@ final class LVK_Tshirt_Order {
         if (!$product || !class_exists('LVK_Helper') || !LVK_Helper::is_event_product($product)) {
             return;
         }
+
+        // Cek apakah produk ini mengaktifkan penawaran baju
+        if (get_post_meta($product->get_id(), '_lvk_offer_tshirt', true) !== 'yes') {
+            return;
+        }
+
         // Input wajib diisi sebelum add to cart
         echo '<input type="hidden" name="lvk_tshirt_size" id="lvk_tshirt_size_hidden" value="">';
     }
@@ -147,9 +206,12 @@ final class LVK_Tshirt_Order {
         $product = wc_get_product($product_id);
         
         if ($product && class_exists('LVK_Helper') && LVK_Helper::is_event_product($product)) {
-            if (!isset($_POST['lvk_tshirt_size']) || $_POST['lvk_tshirt_size'] === '') {
-                wc_add_notice('Mohon pilih preferensi Baju Kegiatan terlebih dahulu sebelum melanjutkan ke pendaftaran.', 'error');
-                return false;
+            // Hanya validasi jika produk ini menawarkan baju
+            if (get_post_meta($product->get_id(), '_lvk_offer_tshirt', true) === 'yes') {
+                if (!isset($_POST['lvk_tshirt_size']) || $_POST['lvk_tshirt_size'] === '') {
+                    wc_add_notice('Mohon pilih preferensi Baju Kegiatan terlebih dahulu sebelum melanjutkan ke pendaftaran.', 'error');
+                    return false;
+                }
             }
         }
         return $passed;
