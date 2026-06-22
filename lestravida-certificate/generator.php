@@ -138,13 +138,25 @@ class LVCERT_Generator {
             $font_path = LVCERT_DIR . '/fonts/PlayfairDisplay-Italic.ttf'; // Fallback keras
         }
 
+        // Resolusi absolute path (Penting untuk GD Library)
+        if (file_exists($font_path)) {
+            $font_path = realpath($font_path);
+        } else {
+            // Jika font fallback juga tidak ada di server user, hentikan proses untuk menghindari error imagettfbbox
+            wp_die(__('Error kritis: File font tidak ditemukan di server. Pastikan folder fonts/ sudah terupload.', 'lestravida'));
+        }
+
         // Warna teks
         $rgb = self::hex_to_rgb($color_hex);
         $text_color = imagecolorallocate($image, $rgb['r'], $rgb['g'], $rgb['b']);
 
         // Kalkulasi posisi X untuk Center
         $image_width = imagesx($image);
-        $bbox = imagettfbbox($font_size, 0, $font_path, $text);
+        $bbox = @imagettfbbox($font_size, 0, $font_path, $text);
+        
+        if (!$bbox) {
+            wp_die(__('Error GD Library: Gagal membaca file font meskipun file ada. Hubungi pihak hosting. Path: ' . esc_html($font_path), 'lestravida'));
+        }
         
         // $bbox[2] adalah X lower right, $bbox[0] adalah X lower left
         $text_width = abs($bbox[2] - $bbox[0]);
