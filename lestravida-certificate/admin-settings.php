@@ -62,13 +62,25 @@ class LVCERT_Admin_Settings {
         echo '<span class="description">' . __('Upload gambar di Media lalu paste URL-nya di sini.', 'lestravida') . '</span>';
         echo '</p>';
 
-        // URL Font (Media Uploader)
-        $font_url = get_post_meta($post->ID, '_lvk_cert_font_url', true);
-        echo '<p class="form-field _lvk_cert_font_url_field">';
-        echo '<label for="_lvk_cert_font_url">' . __('URL Font Kustom (.ttf)', 'lestravida') . '</label>';
-        echo '<input type="text" class="short" style="" name="_lvk_cert_font_url" id="_lvk_cert_font_url" value="' . esc_attr($font_url) . '" placeholder="https://..."> ';
+        echo '<p class="form-field">';
+        echo '<label>' . __('Atau Upload Mentahan (Bypass WP)', 'lestravida') . '</label>';
+        echo '<input type="file" name="lvk_custom_cert_upload" accept="image/png, image/jpeg" style="margin-top:5px;">';
+        echo '<span class="description">' . __('Pilih file JPG/PNG dari komputer Anda. Opsi ini 100% mencegah penurunan resolusi oleh WordPress.', 'lestravida') . '</span>';
+        echo '</p>';
+
+        echo '<div style="margin-bottom:15px; border-bottom:1px solid #eee;"></div>';
+
+        woocommerce_wp_text_input([
+            'id'          => '_lvk_cert_font_url',
+            'label'       => __('URL Font Kustom (.ttf / .otf)', 'lestravida'),
+            'placeholder' => 'https://...',
+            'description' => __('Kosongkan untuk menggunakan font bawaan (Luxia-Display).', 'lestravida'),
+            'desc_tip'    => true,
+        ]);
+
+        echo '<p class="form-field">';
+        echo '<label></label>';
         echo '<a href="#" class="button lvk-upload-cert-btn" data-target="_lvk_cert_font_url">Upload Font</a>';
-        echo '<span class="description">' . __('Opsional. Biarkan kosong untuk menggunakan font bawaan (Arial/Helvetica).', 'lestravida') . '</span>';
         echo '</p>';
 
         woocommerce_wp_text_input([
@@ -77,16 +89,12 @@ class LVCERT_Admin_Settings {
             'type'        => 'number',
             'placeholder' => '42',
             'custom_attributes' => ['step' => '1', 'min' => '10'],
-            'description' => __('Ukuran teks nama pada sertifikat (misal: 42).', 'lestravida'),
-            'desc_tip'    => true,
         ]);
 
-        // Color Picker
-        $color = get_post_meta($post->ID, '_lvk_cert_font_color', true);
-        if (empty($color)) $color = '#000000';
-        echo '<p class="form-field _lvk_cert_font_color_field">';
+        $color = get_post_meta($post->ID, '_lvk_cert_font_color', true) ?: '#000000';
+        echo '<p class="form-field _lvk_cert_font_color_field ">';
         echo '<label for="_lvk_cert_font_color">' . __('Warna Teks (Hex)', 'lestravida') . '</label>';
-        echo '<input type="text" class="colorpick" name="_lvk_cert_font_color" id="_lvk_cert_font_color" value="' . esc_attr($color) . '">';
+        echo '<input type="text" id="_lvk_cert_font_color" name="_lvk_cert_font_color" class="colorpick" value="' . esc_attr($color) . '" />';
         echo '<span class="description">' . __('Kode Hex warna, contoh: #000000.', 'lestravida') . '</span>';
         echo '</p>';
 
@@ -145,6 +153,51 @@ class LVCERT_Admin_Settings {
     }
 
     public static function save_cert_meta($post_id) {
+        $upload_dir = wp_upload_dir();
+        $cert_dir = $upload_dir['basedir'] . '/lestravida-certificates';
+        $cert_url = $upload_dir['baseurl'] . '/lestravida-certificates';
+
+        // 1. Cek Auto-Download Google Drive
+        if (!empty($_POST['_lvk_cert_template_url'])) {
+            $template_url = $_POST['_lvk_cert_template_url'];
+            if (strpos($template_url, 'drive.google.com') !== false) {
+                preg_match('/\/d\/([a-zA-Z0-9_-]+)/', $template_url, $matches);
+                if (!empty($matches[1])) {
+                    if (!file_exists($cert_dir)) wp_mkdir_p($cert_dir);
+
+                    $file_id = $matches[1];
+                    $direct_url = "https://drive.google.com/uc?export=download&id={$file_id}";
+                    
+                    $response = wp_remote_get($direct_url, ['timeout' => 30]);
+                    if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                        $image_data = wp_remote_retrieve_body($response);
+                        $ext = (strpos(substr($image_data, 0, 10), 'PNG') !== false) ? 'png' : 'jpg';
+                        $new_filename = 'gdrive_' . $post_id . '_' . time() . '.' . $ext;
+                        
+                        if (file_put_contents($cert_dir . '/' . $new_filename, $image_data)) {
+                            $_POST['_lvk_cert_template_url'] = $cert_url . '/' . $new_filename; 
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Cek Upload Mentahan Langsung (Bypass)
+        if (!empty($_FILES['lvk_custom_cert_upload']['tmp_name'])) {
+            $file = $_FILES['lvk_custom_cert_upload'];
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                if (!file_exists($cert_dir)) wp_mkdir_p($cert_dir);
+
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg', 'jpeg', 'png'])) {
+                    $new_filename = 'cert_' . $post_id . '_' . time() . '.' . $ext;
+                    if (move_uploaded_file($file['tmp_name'], $cert_dir . '/' . $new_filename)) {
+                        $_POST['_lvk_cert_template_url'] = $cert_url . '/' . $new_filename;
+                    }
+                }
+            }
+        }
+
         $fields = [
             '_lvk_cert_enabled',
             '_lvk_cert_template_url',
