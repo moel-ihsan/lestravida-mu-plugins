@@ -53,6 +53,7 @@ class LVCERT_Generator {
         $font_url     = get_post_meta($product_id, '_lvk_cert_font_url', true);
         $font_size    = intval(get_post_meta($product_id, '_lvk_cert_font_size', true)) ?: 42;
         $color_hex    = get_post_meta($product_id, '_lvk_cert_font_color', true) ?: '#000000';
+        $align_meta   = get_post_meta($product_id, '_lvk_cert_text_align', true) ?: 'center';
         $x_pos_meta   = get_post_meta($product_id, '_lvk_cert_x_pos', true);
         $y_pos_meta   = get_post_meta($product_id, '_lvk_cert_y_pos', true);
 
@@ -71,7 +72,7 @@ class LVCERT_Generator {
         }
 
         // Render Gambar
-        self::generate_image($nama_lengkap, $template_url, $font_url, $font_size, $color_hex, $x_pos_meta, $y_pos_meta);
+        self::generate_image($nama_lengkap, $template_url, $font_url, $font_size, $color_hex, $align_meta, $x_pos_meta, $y_pos_meta);
         exit;
     }
 
@@ -89,7 +90,7 @@ class LVCERT_Generator {
         return ['r' => $r, 'g' => $g, 'b' => $b];
     }
 
-    private static function generate_image($text, $template_url, $font_url, $font_size, $color_hex, $x_pos_meta, $y_pos_meta) {
+    private static function generate_image($text, $template_url, $font_url, $font_size, $color_hex, $align_meta, $x_pos_meta, $y_pos_meta) {
         // Ambil gambar template
         $response = wp_remote_get($template_url);
         if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
@@ -165,12 +166,25 @@ class LVCERT_Generator {
         // $bbox[1] adalah Y lower right, $bbox[5] adalah Y upper right
         $text_height = abs($bbox[1] - $bbox[5]);
 
-        // Kalkulasi Posisi X
+        // Kalkulasi Posisi X berdasarkan perataan
         if ($x_pos_meta !== '' && is_numeric($x_pos_meta)) {
-            $x_pos = intval($x_pos_meta);
+            $anchor_x = intval($x_pos_meta);
+            if ($align_meta === 'center') {
+                $x_pos = $anchor_x - ($text_width / 2);
+            } elseif ($align_meta === 'right') {
+                $x_pos = $anchor_x - $text_width;
+            } else { // left
+                $x_pos = $anchor_x;
+            }
         } else {
-            // Auto Center X
-            $x_pos = ($image_width - $text_width) / 2;
+            // Auto X fallback jika kosong
+            if ($align_meta === 'center') {
+                $x_pos = ($image_width - $text_width) / 2;
+            } elseif ($align_meta === 'right') {
+                $x_pos = $image_width - $text_width;
+            } else { // left
+                $x_pos = 0;
+            }
         }
 
         // Kalkulasi Posisi Y
