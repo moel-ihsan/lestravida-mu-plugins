@@ -14,6 +14,7 @@ final class LVK_Tshirt_Order {
      * Hook utama
      */
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
         // Enqueue Assets
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
 

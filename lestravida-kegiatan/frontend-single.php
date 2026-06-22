@@ -281,6 +281,7 @@ final class LVK_Single {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_action(
             'woocommerce_single_product_summary',

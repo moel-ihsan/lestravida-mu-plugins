@@ -77,6 +77,7 @@ final class LVK_Admin_Cleanup {
      * =========================================================
      */
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_action(
             'init',

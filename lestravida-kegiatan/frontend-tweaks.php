@@ -173,6 +173,7 @@ final class LVK_Frontend_Tweaks {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_filter(
             'woocommerce_get_price_html',

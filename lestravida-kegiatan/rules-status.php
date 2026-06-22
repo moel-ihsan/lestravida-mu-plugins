@@ -236,6 +236,7 @@ final class LVK_Rules {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_filter(
             'woocommerce_is_purchasable',

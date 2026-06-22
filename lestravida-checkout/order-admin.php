@@ -162,6 +162,7 @@ final class LVC_Order_Admin {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_action(
             'woocommerce_admin_order_data_after_billing_address',

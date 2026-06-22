@@ -440,6 +440,7 @@ final class LVC_Checkout_Fields {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
         add_filter('woocommerce_checkout_fields', [__CLASS__, 'customize_fields']);
         add_action('woocommerce_after_order_notes', [__CLASS__, 'render_upload_fields']);
         add_action('woocommerce_after_checkout_validation', [__CLASS__, 'validate_uploads'], 10, 2);

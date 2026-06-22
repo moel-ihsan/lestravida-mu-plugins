@@ -130,6 +130,7 @@ final class LVK_Cart_UI {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_action(
             'woocommerce_before_add_to_cart_button',

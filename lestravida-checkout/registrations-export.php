@@ -700,6 +700,7 @@ final class LVC_Registrations_Export {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
         add_action('admin_menu', [__CLASS__, 'admin_menu']);
         add_action('admin_post_lvc_export_csv', [__CLASS__, 'export_csv']);
         add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_assets']);

@@ -34,6 +34,7 @@ add_action('admin_menu', 'lvc_register_admin_menu', 5);
 add_action('admin_menu', 'lvc_remove_duplicate_admin_menu', 999);
 
 function lvc_register_admin_menu(): void {
+    if (!class_exists('WooCommerce')) return;
 
     add_menu_page(
         'Lestravida',

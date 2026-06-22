@@ -561,6 +561,7 @@ final class LVC_Google_Drive {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
         add_action(
             'woocommerce_checkout_order_processed',
             [__CLASS__, 'schedule_upload'],

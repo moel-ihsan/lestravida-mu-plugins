@@ -274,6 +274,7 @@ final class LVK_Counter {
     }
 
     public static function hooks() {
+        if (!class_exists('WooCommerce')) return;
 
         add_shortcode('lv_counter', [__CLASS__, 'shortcode_counter']);
         add_shortcode('lv_counter_number', [__CLASS__, 'shortcode_counter_number']);

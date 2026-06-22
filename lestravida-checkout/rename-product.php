@@ -37,6 +37,7 @@ final class LVC_Rename_Product {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
         add_action('init', [__CLASS__, 'rename_labels'], 20);
     }
 }

@@ -366,6 +366,7 @@ final class LVK_Admin_Fields {
      * =========================================================
      */
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_action(
             'woocommerce_product_options_general_product_data',

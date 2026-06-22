@@ -149,6 +149,7 @@ final class LVK_Loop {
     }
 
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_action(
             'woocommerce_after_shop_loop_item_title',

@@ -205,6 +205,7 @@ final class LVK_Thankyou_WA {
     }
 
     public static function hooks() {
+        if (!class_exists('WooCommerce')) return;
         add_action(
             'woocommerce_order_details_after_order_table',
             [__CLASS__, 'render_order_page'],

@@ -54,6 +54,7 @@ final class LVK_Checkout_Fee {
      * =========================================================
      */
     public static function hooks(): void {
+        if (!class_exists('WooCommerce')) return;
 
         add_filter(
             'woocommerce_product_get_price',
