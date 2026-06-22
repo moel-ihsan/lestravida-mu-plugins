@@ -91,14 +91,40 @@ class LVCERT_Admin_Settings {
         echo '</p>';
 
         woocommerce_wp_text_input([
+            'id'          => '_lvk_cert_x_pos',
+            'label'       => __('Posisi X (Pixel)', 'lestravida'),
+            'type'        => 'number',
+            'placeholder' => 'Auto Center',
+            'custom_attributes' => ['step' => '1'],
+            'description' => __('Jarak teks dari batas kiri. Kosongkan untuk rata tengah (Center).', 'lestravida'),
+            'desc_tip'    => true,
+        ]);
+
+        woocommerce_wp_text_input([
             'id'          => '_lvk_cert_y_pos',
             'label'       => __('Posisi Y (Pixel)', 'lestravida'),
             'type'        => 'number',
-            'placeholder' => '500',
+            'placeholder' => 'Auto Center',
             'custom_attributes' => ['step' => '1'],
-            'description' => __('Jarak teks dari batas atas gambar. Posisi horizontal (Kiri-Kanan) akan rata tengah otomatis.', 'lestravida'),
+            'description' => __('Jarak teks dari batas atas. Kosongkan untuk rata tengah vertikal.', 'lestravida'),
             'desc_tip'    => true,
         ]);
+
+        // Tombol Visual Editor
+        echo '<p class="form-field">';
+        echo '<label></label>';
+        echo '<a href="#" class="button button-primary lvk-open-visual-editor">Buka Editor Visual</a>';
+        echo '</p>';
+
+        // Container Visual Editor (Awalnya Sembunyi)
+        echo '<div id="lvk-visual-editor-container" style="display:none; margin: 15px 0; padding: 15px; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+        echo '<h4 style="margin-top:0;">Simulasi Penempatan Teks</h4>';
+        echo '<p style="margin-bottom:15px; color:#666;">Geser teks "NAMA PESERTA" ke posisi yang Anda inginkan. Koordinat X dan Y akan otomatis tersimpan. Pastikan Anda sudah mengisi "URL Template" dan menyimpannya (atau setidaknya kolom URL Template terisi) agar gambar dapat dimuat.</p>';
+        echo '<div id="lvk-visual-editor-canvas" style="position:relative; width:100%; max-width:800px; height:400px; background-color:#eee; background-size:contain; background-repeat:no-repeat; background-position:top left; border:1px dashed #999; overflow:hidden;">';
+        echo '<div id="lvk-visual-editor-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); cursor:move; color:#000; font-size:24px; font-weight:bold; white-space:nowrap; padding:5px; border:1px solid rgba(0,0,0,0.2); background:rgba(255,255,255,0.5);">NAMA PESERTA</div>';
+        echo '</div>';
+        echo '</div>';
+
         echo '</div>';
         
         echo '</div>';
@@ -112,6 +138,7 @@ class LVCERT_Admin_Settings {
             '_lvk_cert_font_url',
             '_lvk_cert_font_size',
             '_lvk_cert_font_color',
+            '_lvk_cert_x_pos',
             '_lvk_cert_y_pos',
         ];
 
@@ -135,11 +162,15 @@ class LVCERT_Admin_Settings {
             wp_enqueue_media();
             wp_enqueue_style('wp-color-picker');
             wp_enqueue_script('wp-color-picker');
+            wp_enqueue_script('jquery-ui-draggable');
             
-            // Inline script for media uploader and color picker
             wp_add_inline_script('wp-color-picker', "
                 jQuery(document).ready(function($){
-                    $('.colorpick').wpColorPicker();
+                    $('.colorpick').wpColorPicker({
+                        change: function(event, ui) {
+                            $('#lvk-visual-editor-text').css('color', ui.color.toString());
+                        }
+                    });
 
                     $('.lvk-upload-cert-btn').on('click', function(e) {
                         e.preventDefault();
@@ -155,6 +186,85 @@ class LVCERT_Admin_Settings {
                             var attachment = customUploader.state().get('selection').first().toJSON();
                             targetInput.val(attachment.url);
                         }).open();
+                    });
+
+                    // VISUAL EDITOR LOGIC
+                    var canvas = $('#lvk-visual-editor-canvas');
+                    var draggie = $('#lvk-visual-editor-text');
+                    var imgNaturalWidth = 0;
+                    var imgNaturalHeight = 0;
+
+                    $('.lvk-open-visual-editor').on('click', function(e){
+                        e.preventDefault();
+                        var imgUrl = $('#_lvk_cert_template_url').val();
+                        if (!imgUrl) {
+                            alert('Harap isi URL Template terlebih dahulu!');
+                            return;
+                        }
+
+                        $('#lvk-visual-editor-container').slideDown();
+
+                        // Load image to get natural dimensions
+                        var img = new Image();
+                        img.onload = function() {
+                            imgNaturalWidth = this.width;
+                            imgNaturalHeight = this.height;
+                            
+                            // Scale canvas to match image ratio
+                            var canvasWidth = canvas.width();
+                            var scaleFactor = canvasWidth / imgNaturalWidth;
+                            var canvasHeight = imgNaturalHeight * scaleFactor;
+                            
+                            canvas.css({
+                                'background-image': 'url(' + imgUrl + ')',
+                                'height': canvasHeight + 'px'
+                            });
+
+                            // Apply styles to text
+                            var fontSize = $('#_lvk_cert_font_size').val() || 42;
+                            var fontColor = $('#_lvk_cert_font_color').val() || '#000000';
+                            
+                            // Visual scale approximation for font
+                            var visualFontSize = fontSize * scaleFactor;
+                            draggie.css({
+                                'font-size': visualFontSize + 'px',
+                                'color': fontColor
+                            });
+
+                            // Set initial position based on inputs
+                            var initX = $('#_lvk_cert_x_pos').val();
+                            var initY = $('#_lvk_cert_y_pos').val();
+
+                            if (initX && !isNaN(initX)) {
+                                draggie.css({ left: (initX * scaleFactor) + 'px', transform: 'translate(0, -50%)' });
+                            } else {
+                                draggie.css({ left: '50%', transform: 'translate(-50%, -50%)' });
+                            }
+
+                            if (initY && !isNaN(initY)) {
+                                draggie.css('top', (initY * scaleFactor) + 'px');
+                            } else {
+                                draggie.css('top', '50%');
+                            }
+                        };
+                        img.src = imgUrl;
+                    });
+
+                    draggie.draggable({
+                        containment: 'parent',
+                        drag: function(event, ui) {
+                            if (imgNaturalWidth === 0) return;
+
+                            var canvasWidth = canvas.width();
+                            var scaleFactor = imgNaturalWidth / canvasWidth;
+
+                            // Calculate real coordinates
+                            var realX = Math.round(ui.position.left * scaleFactor);
+                            var realY = Math.round(ui.position.top * scaleFactor); // GD Y is baseline, but let\'s map approx top
+
+                            $('#_lvk_cert_x_pos').val(realX);
+                            $('#_lvk_cert_y_pos').val(realY);
+                        }
                     });
                 });
             ");

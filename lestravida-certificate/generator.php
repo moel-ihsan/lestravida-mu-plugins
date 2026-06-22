@@ -53,7 +53,8 @@ class LVCERT_Generator {
         $font_url     = get_post_meta($product_id, '_lvk_cert_font_url', true);
         $font_size    = intval(get_post_meta($product_id, '_lvk_cert_font_size', true)) ?: 42;
         $color_hex    = get_post_meta($product_id, '_lvk_cert_font_color', true) ?: '#000000';
-        $y_pos        = intval(get_post_meta($product_id, '_lvk_cert_y_pos', true)) ?: 500;
+        $x_pos_meta   = get_post_meta($product_id, '_lvk_cert_x_pos', true);
+        $y_pos_meta   = get_post_meta($product_id, '_lvk_cert_y_pos', true);
 
         if (empty($template_url)) {
             wp_die(__('Admin belum mengupload template sertifikat untuk kegiatan ini.', 'lestravida'));
@@ -70,7 +71,7 @@ class LVCERT_Generator {
         }
 
         // Render Gambar
-        self::generate_image($nama_lengkap, $template_url, $font_url, $font_size, $color_hex, $y_pos);
+        self::generate_image($nama_lengkap, $template_url, $font_url, $font_size, $color_hex, $x_pos_meta, $y_pos_meta);
         exit;
     }
 
@@ -88,7 +89,7 @@ class LVCERT_Generator {
         return ['r' => $r, 'g' => $g, 'b' => $b];
     }
 
-    private static function generate_image($text, $template_url, $font_url, $font_size, $color_hex, $y_pos) {
+    private static function generate_image($text, $template_url, $font_url, $font_size, $color_hex, $x_pos_meta, $y_pos_meta) {
         // Ambil gambar template
         $response = wp_remote_get($template_url);
         if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
@@ -150,8 +151,9 @@ class LVCERT_Generator {
         $rgb = self::hex_to_rgb($color_hex);
         $text_color = imagecolorallocate($image, $rgb['r'], $rgb['g'], $rgb['b']);
 
-        // Kalkulasi posisi X untuk Center
+        // Kalkulasi Dimensi Image dan Teks
         $image_width = imagesx($image);
+        $image_height = imagesy($image);
         $bbox = @imagettfbbox($font_size, 0, $font_path, $text);
         
         if (!$bbox) {
@@ -160,10 +162,28 @@ class LVCERT_Generator {
         
         // $bbox[2] adalah X lower right, $bbox[0] adalah X lower left
         $text_width = abs($bbox[2] - $bbox[0]);
-        $x_pos = ($image_width - $text_width) / 2;
+        // $bbox[1] adalah Y lower right, $bbox[5] adalah Y upper right
+        $text_height = abs($bbox[1] - $bbox[5]);
+
+        // Kalkulasi Posisi X
+        if ($x_pos_meta !== '' && is_numeric($x_pos_meta)) {
+            $x_pos = intval($x_pos_meta);
+        } else {
+            // Auto Center X
+            $x_pos = ($image_width - $text_width) / 2;
+        }
+
+        // Kalkulasi Posisi Y
+        // GD Y adalah garis baseline, jadi kita adjust agar sesuai posisi atas visual
+        if ($y_pos_meta !== '' && is_numeric($y_pos_meta)) {
+            $y_pos = intval($y_pos_meta) + $text_height; 
+        } else {
+            // Auto Center Y
+            $y_pos = ($image_height + $text_height) / 2;
+        }
 
         // Cetak Teks
-        imagettftext($image, $font_size, 0, (int)$x_pos, $y_pos, $text_color, $font_path, $text);
+        imagettftext($image, $font_size, 0, (int)$x_pos, (int)$y_pos, $text_color, $font_path, $text);
 
         // Bersihkan temp font
         if ($temp_font && file_exists($temp_font)) {
