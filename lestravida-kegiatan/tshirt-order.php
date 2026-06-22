@@ -74,11 +74,17 @@ final class LVK_Tshirt_Order {
      * Data master opsi baju (agar tidak hardcode)
      */
     public static function get_tshirt_options(): array {
+        $price_normal = (int) get_option('lvc_tshirt_price_normal', 88000);
+        $price_extra  = (int) get_option('lvc_tshirt_price_extra', 98000);
+
+        $display_normal = '+' . ($price_normal / 1000) . 'Rb';
+        $display_extra  = '+' . ($price_extra / 1000) . 'Rb';
+
         return apply_filters('lvk_tshirt_options', [
-            'S'    => ['label' => 'S', 'price' => 88000, 'display_price' => '+88Rb'],
-            'M'    => ['label' => 'M', 'price' => 88000, 'display_price' => '+88Rb'],
-            'L'    => ['label' => 'L', 'price' => 88000, 'display_price' => '+88Rb'],
-            '> XL' => ['label' => '> XL', 'price' => 98000, 'display_price' => '+98Rb'],
+            'S'    => ['label' => 'S', 'price' => $price_normal, 'display_price' => $display_normal],
+            'M'    => ['label' => 'M', 'price' => $price_normal, 'display_price' => $display_normal],
+            'L'    => ['label' => 'L', 'price' => $price_normal, 'display_price' => $display_normal],
+            '> XL' => ['label' => '> XL', 'price' => $price_extra, 'display_price' => $display_extra],
         ]);
     }
 
@@ -91,6 +97,7 @@ final class LVK_Tshirt_Order {
         }
 
         $options = self::get_tshirt_options();
+        $image_url = get_option('lvc_tshirt_image_url', 'https://placehold.co/600x400/eeeeee/333333?text=Gambar+Baju+%26+Size+Chart');
         ?>
         <div class="lv-meta-item lvk-tshirt-ui-container">
             <span class="lv-meta-label">Order Baju Kegiatan</span>
@@ -108,14 +115,13 @@ final class LVK_Tshirt_Order {
                 </div>
                 
                 <div id="lvk-tshirt-validation-msg" style="display: none; color: #dc2626; font-size: 13px; margin-top: 6px; margin-bottom: 10px; font-weight: 500;">
-                    ⚠️ Wajib pilih salah satu opsi di atas sebelum mendaftar.
+                    Mohon pilih preferensi Baju Kegiatan terlebih dahulu sebelum melanjutkan ke pendaftaran.
                 </div>
 
                 <a href="#" id="lvk-show-size-chart" class="lvk-show-size-chart-link">Lihat Desain & Size Chart</a>
 
                 <div id="lvk-size-chart-container" class="lvk-size-chart-wrapper">
-                    <p class="lvk-size-chart-title">Desain & Size Chart (Placeholder)</p>
-                    <img src="https://placehold.co/600x400/eeeeee/333333?text=Gambar+Baju+%26+Size+Chart" alt="Size Chart" />
+                    <img src="<?php echo esc_url($image_url); ?>" alt="Size Chart" />
                 </div>
             </div>
         </div>
@@ -142,7 +148,7 @@ final class LVK_Tshirt_Order {
         
         if ($product && class_exists('LVK_Helper') && LVK_Helper::is_event_product($product)) {
             if (!isset($_POST['lvk_tshirt_size']) || $_POST['lvk_tshirt_size'] === '') {
-                wc_add_notice('Silakan pilih opsi Order Baju (atau klik "Tidak Pesan") sebelum mendaftar.', 'error');
+                wc_add_notice('Mohon pilih preferensi Baju Kegiatan terlebih dahulu sebelum melanjutkan ke pendaftaran.', 'error');
                 return false;
             }
         }

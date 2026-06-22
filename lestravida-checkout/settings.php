@@ -31,6 +31,11 @@ final class LVC_Settings {
         register_setting($group, 'lvc_checkout_fee_amount', ['type' => 'integer']);
         register_setting($group, 'lvc_big_image_threshold', ['type' => 'integer']);
         register_setting($group, 'lvc_google_drive_alert_email', ['type' => 'string']);
+        
+        // T-Shirt Settings
+        register_setting($group, 'lvc_tshirt_price_normal', ['type' => 'integer']);
+        register_setting($group, 'lvc_tshirt_price_extra', ['type' => 'integer']);
+        register_setting($group, 'lvc_tshirt_image_url', ['type' => 'string']);
     }
 
     public static function render_page() {
@@ -78,6 +83,35 @@ final class LVC_Settings {
                         <td>
                             <input type="email" id="lvc_google_drive_alert_email" name="lvc_google_drive_alert_email" value="<?php echo esc_attr(get_option('lvc_google_drive_alert_email', '')); ?>" class="regular-text" />
                             <p class="description">Leave empty to disable email notifications. Errors will still be logged to PHP error log.</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- T-Shirt Settings -->
+                    <tr>
+                        <th scope="row" colspan="2">
+                            <hr>
+                            <h3 style="margin-bottom: 0;">Pengaturan Baju Kegiatan</h3>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="lvc_tshirt_price_normal">Harga Baju Ukuran Standar (S, M, L)</label></th>
+                        <td>
+                            <input type="number" id="lvc_tshirt_price_normal" name="lvc_tshirt_price_normal" value="<?php echo esc_attr(get_option('lvc_tshirt_price_normal', 88000)); ?>" class="regular-text" />
+                            <p class="description">Contoh: 88000 (tanpa titik)</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="lvc_tshirt_price_extra">Harga Baju Ukuran Besar (&gt; XL)</label></th>
+                        <td>
+                            <input type="number" id="lvc_tshirt_price_extra" name="lvc_tshirt_price_extra" value="<?php echo esc_attr(get_option('lvc_tshirt_price_extra', 98000)); ?>" class="regular-text" />
+                            <p class="description">Contoh: 98000 (tanpa titik)</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="lvc_tshirt_image_url">URL Desain Baju & Size Chart</label></th>
+                        <td>
+                            <input type="url" id="lvc_tshirt_image_url" name="lvc_tshirt_image_url" value="<?php echo esc_attr(get_option('lvc_tshirt_image_url', 'https://placehold.co/600x400/eeeeee/333333?text=Gambar+Baju+%26+Size+Chart')); ?>" class="large-text" />
+                            <p class="description">Masukkan link URL gambar desain baju dari Media Library.</p>
                         </td>
                     </tr>
                 </table>
