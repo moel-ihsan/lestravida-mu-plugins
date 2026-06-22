@@ -204,13 +204,25 @@ class LVCERT_Generator {
             @unlink($temp_font);
         }
 
-        // Output ke Browser
-        header('Content-Type: image/jpeg');
-        // Uncomment baris di bawah ini jika ingin langsung memicu download file:
-        header('Content-Disposition: attachment; filename="Sertifikat-' . sanitize_title($text) . '.jpg"');
+        // Output ke Browser berdasarkan format asli template
+        $ext = strtolower(pathinfo(parse_url($template_url, PHP_URL_PATH), PATHINFO_EXTENSION));
+
+        if ($ext === 'png') {
+            header('Content-Type: image/png');
+            header('Content-Disposition: attachment; filename="Sertifikat-' . sanitize_title($text) . '.png"');
+            
+            // Jaga kualitas PNG dan Alpha Channel
+            imagealphablending($image, false);
+            imagesavealpha($image, true);
+            imagepng($image, null, 9); // Kompresi maksimal (Lossless, ukuran file lebih kecil, kualitas 100%)
+        } else {
+            header('Content-Type: image/jpeg');
+            header('Content-Disposition: attachment; filename="Sertifikat-' . sanitize_title($text) . '.jpg"');
+            
+            // Output as maximum quality JPEG
+            imagejpeg($image, null, 100);
+        }
         
-        // Output as high quality JPEG
-        imagejpeg($image, null, 95);
         imagedestroy($image);
     }
 }
