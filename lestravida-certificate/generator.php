@@ -106,15 +106,36 @@ class LVCERT_Generator {
         $temp_font = false;
 
         if (!empty($font_url)) {
-            // Download font ke temp file jika admin input URL custom font
-            $font_response = wp_remote_get($font_url);
-            if (!is_wp_error($font_response) && wp_remote_retrieve_response_code($font_response) === 200) {
-                $temp_font = wp_tempnam($font_url);
-                if ($temp_font) {
-                    file_put_contents($temp_font, wp_remote_retrieve_body($font_response));
-                    $font_path = $temp_font;
+            // Coba ambil local path langsung jika itu adalah attachment di website yang sama
+            $attachment_id = attachment_url_to_postid($font_url);
+            $local_font_found = false;
+            
+            if ($attachment_id) {
+                $local_path = get_attached_file($attachment_id);
+                if ($local_path && file_exists($local_path)) {
+                    $font_path = $local_path;
+                    $local_font_found = true;
                 }
             }
+
+            if (!$local_font_found) {
+                // Download font ke temp file jika URL dari luar
+                $font_response = wp_remote_get($font_url);
+                if (!is_wp_error($font_response) && wp_remote_retrieve_response_code($font_response) === 200) {
+                    // Beberapa versi GD butuh ekstensi .ttf
+                    $upload_dir = wp_upload_dir();
+                    $temp_font = trailingslashit($upload_dir['basedir']) . 'temp_cert_font_' . time() . '_' . rand(100,999) . '.ttf';
+                    file_put_contents($temp_font, wp_remote_retrieve_body($font_response));
+                    if (file_exists($temp_font)) {
+                        $font_path = $temp_font;
+                    }
+                }
+            }
+        }
+
+        // Pastikan path valid untuk GD Library
+        if (!file_exists($font_path)) {
+            $font_path = LVCERT_DIR . '/fonts/PlayfairDisplay-Italic.ttf'; // Fallback keras
         }
 
         // Warna teks
