@@ -60,10 +60,8 @@ class LVCERT_Generator {
         }
 
         // Nama peserta (bisa dari meta 'Nama Lengkap' atau billing name)
-        $nama_lengkap = '';
-        if (class_exists('LVK_Helper')) {
-            $nama_lengkap = $item->get_meta(LVK_Helper::META_ITEM_NAMA_LENGKAP);
-        }
+        $nama_lengkap = $item->get_meta('Nama Lengkap');
+        
         if (empty($nama_lengkap)) {
             $nama_lengkap = $order->get_formatted_billing_full_name();
         }
