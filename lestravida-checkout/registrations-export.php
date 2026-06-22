@@ -273,7 +273,8 @@ final class LVC_Registrations_Export {
             $rows[] = self::row_from_order($order, $product_id);
         }
 
-        self::render_rows_table($rows);
+        $offer_tshirt = get_post_meta($product_id, '_lvk_offer_tshirt', true) === 'yes';
+        self::render_rows_table($rows, $offer_tshirt);
 
         if ($per_page !== -1) {
             self::render_pagination($product_id, $paged);
@@ -335,6 +336,17 @@ final class LVC_Registrations_Export {
     private static function row_from_order(WC_Order $order, int $product_id): array {
         $drive = self::drive_files_for_product($order, $product_id);
 
+        $tshirt_size = '-';
+        foreach ($order->get_items() as $item) {
+            if ((int) $item->get_product_id() === $product_id) {
+                $meta = $item->get_meta('Tambahan Baju');
+                if (!empty($meta)) {
+                    $tshirt_size = str_replace('Ukuran ', '', $meta);
+                }
+                break;
+            }
+        }
+
         return [
             'order'       => $order->get_id(),
             'nama'        => $order->get_formatted_billing_full_name(),
@@ -346,16 +358,21 @@ final class LVC_Registrations_Export {
             'sumber_info' => $order->get_meta('_billing_source_info'),
             'tanggal_txt' => $order->get_date_created() ? wc_format_datetime($order->get_date_created()) : '-',
             'status'      => wc_get_order_status_name($order->get_status()),
+            'ukuran_baju' => $tshirt_size,
             'bukti_lv'    => $drive['bukti_lv'],
             'bukti_lvdaerah' => $drive['bukti_lvdaerah'],
             'bukti_share' => $drive['bukti_share'],
         ];
     }
 
-    private static function render_rows_table(array $rows): void {
+    private static function render_rows_table(array $rows, bool $offer_tshirt = false): void {
         echo '<table class="widefat striped lvc-recap-table">';
         echo '<thead><tr>';
-        echo '<th>No</th><th>Order</th><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Umur</th><th>Sekolah</th><th>Instagram</th><th>Sumber Info</th><th>Tanggal</th><th>Status</th><th>Bukti LV</th><th>Bukti LV Daerah</th><th>Bukti Share</th>';
+        echo '<th>No</th><th>Order</th><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Umur</th><th>Sekolah</th><th>Instagram</th><th>Sumber Info</th><th>Tanggal</th><th>Status</th>';
+        if ($offer_tshirt) {
+            echo '<th>Ukuran Baju</th>';
+        }
+        echo '<th>Bukti LV</th><th>Bukti LV Daerah</th><th>Bukti Share</th>';
         echo '</tr></thead><tbody>';
 
         $no = 1;
@@ -374,6 +391,10 @@ final class LVC_Registrations_Export {
             echo '<td>' . esc_html($row['tanggal_txt']) . '</td>';
             echo '<td>' . esc_html($row['status']) . '</td>';
 
+            if ($offer_tshirt) {
+                echo '<td>' . esc_html($row['ukuran_baju']) . '</td>';
+            }
+
             self::print_url_cell($row['bukti_lv']);
             self::print_url_cell($row['bukti_lvdaerah']);
             self::print_url_cell($row['bukti_share']);
@@ -382,7 +403,8 @@ final class LVC_Registrations_Export {
         }
 
         if (empty($rows)) {
-            echo '<tr><td colspan="14">Tidak ada peserta pada halaman ini.</td></tr>';
+            $colspan = $offer_tshirt ? 15 : 14;
+            echo '<tr><td colspan="' . esc_attr($colspan) . '">Tidak ada peserta pada halaman ini.</td></tr>';
         }
 
         echo '</tbody></table>';
@@ -528,7 +550,9 @@ final class LVC_Registrations_Export {
 
         $output = fopen('php://output', 'w');
 
-        fputcsv($output, [
+        $offer_tshirt = $product_id === 0 || get_post_meta($product_id, '_lvk_offer_tshirt', true) === 'yes';
+
+        $headers = [
             'Order ID',
             'Nama',
             'Email',
@@ -539,11 +563,20 @@ final class LVC_Registrations_Export {
             'Sumber Informasi',
             'Event',
             'Tanggal',
-            'Status',
+            'Status'
+        ];
+
+        if ($offer_tshirt) {
+            $headers[] = 'Ukuran Baju';
+        }
+
+        $headers = array_merge($headers, [
             'Bukti Follow Lestravida',
             'Bukti Follow Lestravida Daerah',
             'Bukti Share Kegiatan',
         ]);
+
+        fputcsv($output, $headers);
 
         foreach (self::get_orders(['limit' => -1]) as $order) {
             foreach (self::order_product_ids($order) as $order_product_id) {
@@ -558,7 +591,20 @@ final class LVC_Registrations_Export {
                 $drive = self::drive_files_for_product($order, $order_product_id);
                 $ctx   = self::product_context($order_product_id);
 
-                fputcsv($output, [
+                $tshirt_size = '-';
+                if ($offer_tshirt) {
+                    foreach ($order->get_items() as $item) {
+                        if ((int) $item->get_product_id() === $order_product_id) {
+                            $meta = $item->get_meta('Tambahan Baju');
+                            if (!empty($meta)) {
+                                $tshirt_size = str_replace('Ukuran ', '', $meta);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                $row_data = [
                     $order->get_id(),
                     $order->get_formatted_billing_full_name(),
                     $order->get_billing_email(),
@@ -570,10 +616,19 @@ final class LVC_Registrations_Export {
                     $ctx['title'],
                     wc_format_datetime($order->get_date_created()),
                     wc_get_order_status_name($order->get_status()),
+                ];
+
+                if ($offer_tshirt) {
+                    $row_data[] = $tshirt_size;
+                }
+
+                $row_data = array_merge($row_data, [
                     $drive['bukti_lv'],
                     $drive['bukti_lvdaerah'],
                     $drive['bukti_share'],
                 ]);
+
+                fputcsv($output, $row_data);
             }
         }
 
