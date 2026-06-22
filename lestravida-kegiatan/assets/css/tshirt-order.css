@@ -3,9 +3,7 @@
 ========================================================= */
 
 .lvk-tshirt-ui-container {
-    border-top: 1px dashed #eaeaea;
-    margin-top: 15px;
-    padding-top: 15px;
+    /* Menghapus border-top dan padding agar tidak double garis dengan elemen di atasnya */
 }
 
 .lvk-tshirt-options {
@@ -89,13 +87,31 @@
     color: #555;
 }
 
-@keyframes lvkShake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-5px); }
-    40%, 80% { transform: translateX(5px); }
+.lvk-tshirt-custom-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background-color: #f9fafb;
+    box-sizing: border-box;
 }
 
-.lvk-error-shake {
+.lvk-tshirt-custom-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+@keyframes lvkShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); border-color: #dc2626 !important; }
+    40%, 80% { transform: translateX(5px); border-color: #dc2626 !important; }
+}
+
+.lvk-shake {
     animation: lvkShake 0.4s ease-in-out;
 }
 .lvk-error-shake .lvk-tshirt-pill {

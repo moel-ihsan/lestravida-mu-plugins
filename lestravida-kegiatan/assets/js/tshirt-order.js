@@ -37,40 +37,84 @@ document.addEventListener('DOMContentLoaded', function() {
     var addToCartBtn = document.querySelector('.single_add_to_cart_button');
     var pillsContainer = document.getElementById('lvk-tshirt-pills-container');
     var validationMsg = document.getElementById('lvk-tshirt-validation-msg');
+    var customContainer = document.getElementById('lvk-tshirt-custom-size-container');
+    var customInput = document.getElementById('lvk-tshirt-custom-size-input');
+    var customHidden = document.getElementById('lvk_tshirt_custom_size_hidden');
     
     if (addToCartBtn && hiddenInput && pillsContainer) {
         addToCartBtn.addEventListener('click', function(e) {
             if (hiddenInput.value === '') {
-                e.preventDefault(); // Stop submission
+                e.preventDefault();
                 
                 // Tampilkan pesan error
-                if (validationMsg) {
-                    validationMsg.style.display = 'block';
-                }
+                validationMsg.style.display = 'block';
+                validationMsg.textContent = 'Mohon pilih preferensi Baju Kegiatan terlebih dahulu sebelum melanjutkan ke pendaftaran.';
                 
-                // Tambahkan animasi shake
-                pillsContainer.classList.remove('lvk-error-shake');
-                void pillsContainer.offsetWidth; // trigger reflow
-                pillsContainer.classList.add('lvk-error-shake');
+                // Tambahkan animasi shake pada container
+                pillsContainer.classList.add('lvk-shake');
                 
-                // Scroll ke opsi baju dengan efek halus
-                pillsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // Hilangkan class setelah animasi selesai
+                // Hapus class shake setelah animasi selesai agar bisa di-trigger lagi nanti
                 setTimeout(function() {
-                    pillsContainer.classList.remove('lvk-error-shake');
-                }, 500);
+                    pillsContainer.classList.remove('lvk-shake');
+                }, 400);
+                
+                // Auto scroll ke bagian opsi baju
+                var y = pillsContainer.getBoundingClientRect().top + window.scrollY - 100;
+                window.scrollTo({top: y, behavior: 'smooth'});
+                
+                return;
+            }
+
+            if (hiddenInput.value === '> XL' && customInput && customHidden.value.trim() === '') {
+                e.preventDefault();
+                
+                validationMsg.style.display = 'block';
+                validationMsg.textContent = 'Mohon sebutkan ukuran spesifik Anda (contoh: XXL atau XXXL).';
+                
+                customInput.classList.add('lvk-shake');
+                setTimeout(function() {
+                    customInput.classList.remove('lvk-shake');
+                }, 400);
+                
+                customInput.focus();
+                return;
             }
         });
         
-        // Sembunyikan pesan error otomatis jika user akhirnya memilih salah satu opsi
-        if (pills.length > 0) {
-            pills.forEach(function(pill) {
-                pill.addEventListener('click', function() {
-                    if (validationMsg) {
-                        validationMsg.style.display = 'none';
-                    }
-                });
+        var pills = pillsContainer.querySelectorAll('.lvk-tshirt-pill');
+        pills.forEach(function(pill) {
+            pill.addEventListener('click', function() {
+                var value = this.getAttribute('data-value');
+                
+                // Hilangkan state active dari semua pill
+                pills.forEach(function(p) { p.classList.remove('active'); });
+                
+                // Set pill yang diklik menjadi active
+                this.classList.add('active');
+                
+                // Simpan value ke hidden input
+                hiddenInput.value = value;
+                
+                // Sembunyikan pesan error jika sudah memilih
+                validationMsg.style.display = 'none';
+
+                // Tampilkan custom input jika pilih > XL
+                if (value === '> XL') {
+                    if (customContainer) customContainer.style.display = 'block';
+                } else {
+                    if (customContainer) customContainer.style.display = 'none';
+                    if (customInput) customInput.value = '';
+                    if (customHidden) customHidden.value = '';
+                }
+            });
+        });
+
+        if (customInput && customHidden) {
+            customInput.addEventListener('input', function() {
+                customHidden.value = this.value;
+                if (this.value.trim() !== '') {
+                    validationMsg.style.display = 'none';
+                }
             });
         }
     }

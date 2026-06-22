@@ -166,6 +166,10 @@ final class LVK_Tshirt_Order {
                         </div>
                     <?php endforeach; ?>
                 </div>
+
+                <div id="lvk-tshirt-custom-size-container" style="display: none; margin-top: 12px; margin-bottom: 12px;">
+                    <input type="text" id="lvk-tshirt-custom-size-input" class="lvk-tshirt-custom-input" placeholder="Sebutkan ukuran spesifik (cth: XXL atau XXXL)">
+                </div>
                 
                 <div id="lvk-tshirt-validation-msg" style="display: none; color: #dc2626; font-size: 13px; margin-top: 6px; margin-bottom: 10px; font-weight: 500;">
                     Mohon pilih preferensi Baju Kegiatan terlebih dahulu sebelum melanjutkan ke pendaftaran.
@@ -197,6 +201,7 @@ final class LVK_Tshirt_Order {
 
         // Input wajib diisi sebelum add to cart
         echo '<input type="hidden" name="lvk_tshirt_size" id="lvk_tshirt_size_hidden" value="">';
+        echo '<input type="hidden" name="lvk_tshirt_custom_size" id="lvk_tshirt_custom_size_hidden" value="">';
     }
 
     /**
@@ -212,6 +217,12 @@ final class LVK_Tshirt_Order {
                     wc_add_notice('Mohon pilih preferensi Baju Kegiatan terlebih dahulu sebelum melanjutkan ke pendaftaran.', 'error');
                     return false;
                 }
+                if ($_POST['lvk_tshirt_size'] === '> XL') {
+                    if (!isset($_POST['lvk_tshirt_custom_size']) || trim($_POST['lvk_tshirt_custom_size']) === '') {
+                        wc_add_notice('Mohon sebutkan ukuran spesifik Anda (contoh: XXL) untuk pilihan > XL.', 'error');
+                        return false;
+                    }
+                }
             }
         }
         return $passed;
@@ -223,6 +234,7 @@ final class LVK_Tshirt_Order {
     public static function add_cart_item_data($cart_item_data, $product_id) {
         if (isset($_POST['lvk_tshirt_size']) && !empty($_POST['lvk_tshirt_size'])) {
             $size = sanitize_text_field(wp_unslash($_POST['lvk_tshirt_size']));
+            $custom_size = isset($_POST['lvk_tshirt_custom_size']) ? sanitize_text_field(wp_unslash($_POST['lvk_tshirt_custom_size'])) : '';
             
             // Jika memilih Tidak Beli, tidak perlu masuk fee atau meta
             if ($size === 'Tidak Beli') {
@@ -233,7 +245,8 @@ final class LVK_Tshirt_Order {
             
             // Validasi apakah ukuran yang dikirim valid
             if (isset($options[$size])) {
-                $cart_item_data['lvk_tshirt_size'] = $size;
+                $actual_size = ($size === '> XL' && !empty(trim($custom_size))) ? strtoupper(trim($custom_size)) : $size;
+                $cart_item_data['lvk_tshirt_size'] = $actual_size;
                 $cart_item_data['lvk_tshirt_fee'] = $options[$size]['price'];
                 
                 // Buat kunci unik agar item di cart tidak digabung jika pesan ukuran beda
