@@ -707,4 +707,4 @@ final class LVC_Registrations_Export {
     }
 }
 
-LVC_Registrations_Export::hooks();
+add_action('plugins_loaded', ['LVC_Registrations_Export', 'hooks']);

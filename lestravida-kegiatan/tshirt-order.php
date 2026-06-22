@@ -307,4 +307,4 @@ final class LVK_Tshirt_Order {
     }
 }
 
-LVK_Tshirt_Order::hooks();
+add_action('plugins_loaded', ['LVK_Tshirt_Order', 'hooks']);

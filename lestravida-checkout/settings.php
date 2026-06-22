@@ -123,4 +123,4 @@ final class LVC_Settings {
     }
 }
 
-LVC_Settings::init();
+add_action('plugins_loaded', ['LVC_Settings', 'init']);

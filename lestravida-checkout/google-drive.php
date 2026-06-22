@@ -584,4 +584,4 @@ final class LVC_Google_Drive {
     }
 }
 
-LVC_Google_Drive::hooks();
+add_action('plugins_loaded', ['LVC_Google_Drive', 'hooks']);

@@ -42,4 +42,4 @@ final class LVC_Rename_Product {
     }
 }
 
-LVC_Rename_Product::hooks();
+add_action('plugins_loaded', ['LVC_Rename_Product', 'hooks']);
