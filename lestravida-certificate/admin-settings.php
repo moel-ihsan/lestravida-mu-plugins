@@ -32,21 +32,24 @@ class LVCERT_Admin_Settings {
         ]);
 
         echo '<div class="options_group">';
-        woocommerce_wp_text_input([
-            'id'          => '_lvk_cert_template_url',
-            'label'       => __('URL Template (JPG/PNG)', 'lestravida'),
-            'placeholder' => 'https://...',
-            'description' => __('Upload gambar di Media lalu paste URL-nya di sini.', 'lestravida'),
-            'desc_tip'    => true,
-        ]);
+        
+        // URL Template (Media Uploader)
+        $template_url = get_post_meta($post->ID, '_lvk_cert_template_url', true);
+        echo '<p class="form-field _lvk_cert_template_url_field">';
+        echo '<label for="_lvk_cert_template_url">' . __('URL Template (JPG/PNG)', 'lestravida') . '</label>';
+        echo '<input type="text" class="short" style="" name="_lvk_cert_template_url" id="_lvk_cert_template_url" value="' . esc_attr($template_url) . '" placeholder="https://..."> ';
+        echo '<a href="#" class="button lvk-upload-cert-btn" data-target="_lvk_cert_template_url">Upload Gambar</a>';
+        echo '<span class="description">' . __('Upload gambar di Media lalu paste URL-nya di sini.', 'lestravida') . '</span>';
+        echo '</p>';
 
-        woocommerce_wp_text_input([
-            'id'          => '_lvk_cert_font_url',
-            'label'       => __('URL Font Kustom (.ttf)', 'lestravida'),
-            'placeholder' => 'https://...',
-            'description' => __('Opsional. Biarkan kosong untuk menggunakan font bawaan (Arial/Helvetica).', 'lestravida'),
-            'desc_tip'    => true,
-        ]);
+        // URL Font (Media Uploader)
+        $font_url = get_post_meta($post->ID, '_lvk_cert_font_url', true);
+        echo '<p class="form-field _lvk_cert_font_url_field">';
+        echo '<label for="_lvk_cert_font_url">' . __('URL Font Kustom (.ttf)', 'lestravida') . '</label>';
+        echo '<input type="text" class="short" style="" name="_lvk_cert_font_url" id="_lvk_cert_font_url" value="' . esc_attr($font_url) . '" placeholder="https://..."> ';
+        echo '<a href="#" class="button lvk-upload-cert-btn" data-target="_lvk_cert_font_url">Upload Font</a>';
+        echo '<span class="description">' . __('Opsional. Biarkan kosong untuk menggunakan font bawaan (Arial/Helvetica).', 'lestravida') . '</span>';
+        echo '</p>';
 
         woocommerce_wp_text_input([
             'id'          => '_lvk_cert_font_size',
@@ -58,13 +61,14 @@ class LVCERT_Admin_Settings {
             'desc_tip'    => true,
         ]);
 
-        woocommerce_wp_text_input([
-            'id'          => '_lvk_cert_font_color',
-            'label'       => __('Warna Teks (Hex)', 'lestravida'),
-            'placeholder' => '#000000',
-            'description' => __('Kode Hex warna, contoh: #000000 (Hitam), #FFFFFF (Putih).', 'lestravida'),
-            'desc_tip'    => true,
-        ]);
+        // Color Picker
+        $color = get_post_meta($post->ID, '_lvk_cert_font_color', true);
+        if (empty($color)) $color = '#000000';
+        echo '<p class="form-field _lvk_cert_font_color_field">';
+        echo '<label for="_lvk_cert_font_color">' . __('Warna Teks (Hex)', 'lestravida') . '</label>';
+        echo '<input type="text" class="colorpick" name="_lvk_cert_font_color" id="_lvk_cert_font_color" value="' . esc_attr($color) . '">';
+        echo '<span class="description">' . __('Kode Hex warna, contoh: #000000.', 'lestravida') . '</span>';
+        echo '</p>';
 
         woocommerce_wp_text_input([
             'id'          => '_lvk_cert_y_pos',
@@ -105,11 +109,35 @@ class LVCERT_Admin_Settings {
         }
     }
 
-    public static function enqueue_admin_scripts() {
+    public static function enqueue_admin_scripts($hook) {
         global $post_type;
         if ($post_type === 'product') {
-            // Optional: load wp media for better UX if needed in future
             wp_enqueue_media();
+            wp_enqueue_style('wp-color-picker');
+            wp_enqueue_script('wp-color-picker');
+            
+            // Inline script for media uploader and color picker
+            wp_add_inline_script('wp-color-picker', "
+                jQuery(document).ready(function($){
+                    $('.colorpick').wpColorPicker();
+
+                    $('.lvk-upload-cert-btn').on('click', function(e) {
+                        e.preventDefault();
+                        var button = $(this);
+                        var targetId = button.data('target');
+                        var targetInput = $('#' + targetId);
+
+                        var customUploader = wp.media({
+                            title: 'Pilih File',
+                            button: { text: 'Gunakan File Ini' },
+                            multiple: false
+                        }).on('select', function() {
+                            var attachment = customUploader.state().get('selection').first().toJSON();
+                            targetInput.val(attachment.url);
+                        }).open();
+                    });
+                });
+            ");
         }
     }
 }
