@@ -8,6 +8,26 @@ class LVCERT_Admin_Settings {
         add_action('woocommerce_product_data_panels', [__CLASS__, 'render_cert_panel']);
         add_action('woocommerce_process_product_meta', [__CLASS__, 'save_cert_meta']);
         add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_scripts']);
+
+        // Izinkan upload font
+        add_filter('upload_mimes', [__CLASS__, 'allow_font_mimes']);
+        add_filter('wp_check_filetype_and_ext', [__CLASS__, 'check_font_filetype'], 10, 4);
+    }
+
+    public static function allow_font_mimes($mimes) {
+        $mimes['ttf'] = 'font/ttf';
+        $mimes['otf'] = 'font/otf';
+        return $mimes;
+    }
+
+    public static function check_font_filetype($data, $file, $filename, $mimes) {
+        $filetype = wp_check_filetype($filename, $mimes);
+        $ext = $filetype['ext'];
+        if (in_array($ext, ['ttf', 'otf'])) {
+            $data['ext']  = $ext;
+            $data['type'] = $filetype['type'];
+        }
+        return $data;
     }
 
     public static function add_cert_tab($tabs) {

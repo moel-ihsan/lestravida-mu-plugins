@@ -102,7 +102,7 @@ class LVCERT_Generator {
         }
 
         // Font file path
-        $font_path = LVCERT_DIR . '/fonts/PlayfairDisplay-Italic.ttf'; // Default Bundled Font
+        $font_path = LVCERT_DIR . '/fonts/Luxia-Display.otf'; // Default Bundled Font
         $temp_font = false;
 
         if (!empty($font_url)) {
@@ -135,7 +135,7 @@ class LVCERT_Generator {
 
         // Pastikan path valid untuk GD Library
         if (!file_exists($font_path)) {
-            $font_path = LVCERT_DIR . '/fonts/PlayfairDisplay-Italic.ttf'; // Fallback keras
+            $font_path = LVCERT_DIR . '/fonts/Luxia-Display.otf'; // Fallback keras
         }
 
         // Resolusi absolute path (Penting untuk GD Library)
